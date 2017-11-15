@@ -1,0 +1,45 @@
+<?php
+
+namespace Discodian\Core\Providers;
+
+use Discodian\Core\Exceptions\MisconfigurationException;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
+use Illuminate\Config\Repository;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\ServiceProvider;
+
+class HttpProvider extends ServiceProvider
+{
+    public function register()
+    {
+        $this->app->singleton(ClientInterface::class, function ($app) {
+            return $this->setupClient($app);
+        });
+    }
+
+    protected function setupClient(Application $app): Client
+    {
+        /** @var Repository $config */
+        $config = $app->make('config');
+
+        if (! $config->get('discord.bot-token')) {
+            throw new MisconfigurationException('Bot token is required, check config/discord.php.');
+        }
+
+        $client = new Client([
+            'base_uri' => $config->get('discord.endpoints.http-api'),
+            'query' => [
+                'v' => $config->get('discord.versions.http-api'),
+                'encoding' => 'json'
+            ],
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'User-Agent' => 'Discodian/' . $app->version(),
+                'Authorization' => 'Bot ' . $config->get('discord.bot-token')
+            ]
+        ]);
+
+        return $client;
+    }
+}

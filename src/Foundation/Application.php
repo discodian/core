@@ -2,7 +2,12 @@
 
 namespace Discodian\Core\Foundation;
 
+use Discodian\Core\Extensions\ExtensionManager;
+use Discodian\Core\Providers\EventProvider;
+use Discodian\Core\Providers\HttpProvider;
+use Discodian\Core\Socket\Connector;
 use Dotenv\Dotenv;
+use Dotenv\Exception\InvalidPathException;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Foundation\Application as Contract;
 
@@ -16,14 +21,56 @@ class Application extends Container implements Contract
 
     protected $bootingCallbacks = [];
     protected $bootedCallbacks = [];
+    protected $booted = false;
 
     public function __construct(string $basePath)
     {
         $this->basePath = realpath($basePath);
         $this->loadEnv();
 
+        $this->setupCoreBindings();
+        $this->setupConfiguration();
+        $this->registerConfiguredProviders();
+    }
+
+    protected function setupCoreBindings()
+    {
         static::setInstance($this);
         $this->instance(Container::class, $this);
+        $this->alias(Container::class, Contract::class);
+
+        $this->singleton(
+            \Illuminate\Contracts\Config\Repository::class,
+            \Illuminate\Config\Repository::class
+        );
+
+        $this->alias(\Illuminate\Contracts\Config\Repository::class, 'config');
+
+        $this->singleton(ExtensionManager::class);
+
+        $this->alias(\GuzzleHttp\Client::class, \GuzzleHttp\ClientInterface::class);
+
+        $this->singleton(Connector::class);
+
+        $this->singleton(
+            \Illuminate\Contracts\Events\Dispatcher::class,
+            function ($app) {
+                return new \Illuminate\Events\Dispatcher($app);
+            }
+        );
+
+        $this->alias(\Illuminate\Contracts\Events\Dispatcher::class, 'events');
+    }
+
+    protected function setupConfiguration()
+    {
+        /** @var \Illuminate\Contracts\Config\Repository $config */
+        $config = $this->make('config');
+        foreach (new \DirectoryIterator($this->configPath()) as $file) {
+            if ($file->getExtension() === 'php' && $path = $file->getRealPath()) {
+                $config->set($file->getBasename('.php'), include $path);
+            }
+        }
     }
 
 
@@ -32,7 +79,11 @@ class Application extends Container implements Contract
      */
     protected function loadEnv()
     {
-        (new Dotenv($this->basePath))->load();
+        try {
+            (new Dotenv($this->basePath))->load();
+        } catch (InvalidPathException $e) {
+            // ..
+        }
     }
 
     /**
@@ -50,9 +101,19 @@ class Application extends Container implements Contract
      *
      * @return string
      */
-    public function basePath()
+    public function basePath(): string
     {
         return $this->basePath;
+    }
+
+    /**
+     * Get the path for the stored configuration files.
+     *
+     * @return string
+     */
+    public function configPath(): string
+    {
+        return $this->basePath() . DIRECTORY_SEPARATOR . 'config';
     }
 
     /**
@@ -92,7 +153,12 @@ class Application extends Container implements Contract
      */
     public function registerConfiguredProviders()
     {
-        // TODO: Implement registerConfiguredProviders() method.
+        foreach ([
+                     HttpProvider::class,
+                     EventProvider::class,
+                 ] as $provider) {
+            $this->register($provider);
+        }
     }
 
     /**
@@ -105,7 +171,8 @@ class Application extends Container implements Contract
      */
     public function register($provider, $options = [], $force = false)
     {
-        // TODO: Implement register() method.
+        $provider = new $provider($this);
+        $this->call([$provider, 'register']);
     }
 
     /**
@@ -127,7 +194,25 @@ class Application extends Container implements Contract
      */
     public function boot()
     {
-        // TODO: Implement boot() method.
+        if ($this->booted) {
+            return;
+        }
+
+        $this->fireAppCallback($this->bootingCallbacks);
+
+        /** @var ExtensionManager $manager */
+        $manager = $this->make(ExtensionManager::class);
+
+        $manager->boot();
+
+        $this->fireAppCallback($this->bootedCallbacks);
+    }
+
+    protected function fireAppCallback(array $callbacks)
+    {
+        foreach ($callbacks as $callback) {
+            call_user_func($callback, $this);
+        }
     }
 
     /**
@@ -138,7 +223,7 @@ class Application extends Container implements Contract
      */
     public function booting($callback)
     {
-        // TODO: Implement booting() method.
+        $this->bootingCallbacks[] = $callback;
     }
 
     /**
@@ -149,7 +234,7 @@ class Application extends Container implements Contract
      */
     public function booted($callback)
     {
-        // TODO: Implement booted() method.
+        $this->bootedCallbacks[] = $callback;
     }
 
     /**
@@ -170,5 +255,13 @@ class Application extends Container implements Contract
     public function getCachedPackagesPath()
     {
         // TODO: Implement getCachedPackagesPath() method.
+    }
+
+    public function run()
+    {
+        /** @var Connector $connector */
+        $connector = $this->make(Connector::class);
+
+        return $connector->run();
     }
 }
