@@ -2,6 +2,7 @@
 
 namespace Discodian\Core\Listeners;
 
+use Discodian\Core\Socket\Heartbeat as Beat;
 use Discodian\Core\Events\Ws\Heartbeat;
 use Discodian\Core\Events\Ws\HeartbeatAcknowledge;
 use Discodian\Core\Socket\EventCode;
@@ -9,6 +10,16 @@ use Illuminate\Contracts\Events\Dispatcher;
 
 class HeartbeatHandler
 {
+    /**
+     * @var Beat
+     */
+    protected $beat;
+
+    public function __construct(Heartbeat $beat)
+    {
+        $this->beat = $beat;
+    }
+
     public function subscribe(Dispatcher $events)
     {
         $events->listen(Heartbeat::class, [$this, 'heartbeat']);
@@ -28,8 +39,6 @@ class HeartbeatHandler
         $received = microtime(true);
         $diff = $received - static::$heartbeat;
         $time = $diff * 1000;
-
-        static::$timer->cancel();
 
     }
 }

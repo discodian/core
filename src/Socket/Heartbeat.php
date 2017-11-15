@@ -2,7 +2,8 @@
 
 namespace Discodian\Core\Socket;
 
-use Amp\Loop;
+use React\EventLoop\LoopInterface;
+use React\EventLoop\Timer\TimerInterface;
 
 final class Heartbeat
 {
@@ -16,13 +17,13 @@ final class Heartbeat
     /**
      * The Loop interval reference.
      *
-     * @var string
+     * @var TimerInterface
      */
     protected $timer;
 
     /**
      * The Loop interval reference for the acknowledge timer.
-     * @var string
+     * @var TimerInterface
      */
     protected $acknowledgeTimer;
 
@@ -32,6 +33,15 @@ final class Heartbeat
      * @var int
      */
     protected $last;
+    /**
+     * @var LoopInterface
+     */
+    protected $loop;
+
+    public function __construct(LoopInterface $loop)
+    {
+        $this->loop = $loop;
+    }
 
     public function beat()
     {
@@ -42,7 +52,7 @@ final class Heartbeat
 
         $this->last = microtime(true);
 
-        $this->acknowledgeTimer = Loop::delay(
+        $this->acknowledgeTimer = $this->loop->addTimer(
             $this->interval / 1000,
             function() {
                 if (! Connector::connected()) {
@@ -59,20 +69,23 @@ final class Heartbeat
         $this->interval = $interval;
 
         if ($this->timer) {
-            Loop::cancel($this->timer);
+            $this->timer->cancel();
+            $this->timer = null;
         }
 
-        $this->timer = Loop::repeat($interval, [$this, 'beat']);
+        $this->timer = $this->loop->addPeriodicTimer($interval, [$this, 'beat']);
         $this->beat();
     }
 
     public function cancel()
     {
         if ($this->timer) {
-            Loop::cancel($this->timer);
+            $this->timer->cancel();
+            $this->timer = null;
         }
         if ($this->acknowledgeTimer) {
-            Loop::cancel($this->acknowledgeTimer);
+            $this->acknowledgeTimer->cancel();
+            $this->acknowledgeTimer = null;
         }
     }
 }

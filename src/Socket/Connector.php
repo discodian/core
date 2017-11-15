@@ -2,7 +2,8 @@
 
 namespace Discodian\Core\Socket;
 
-use Amp\Loop;
+use Psr\Log\LoggerInterface;
+use React\EventLoop\LoopInterface;
 use Discodian\Core\Exceptions\MisconfigurationException;
 use Discodian\Core\Socket\Requests\GatewayRequest;
 use Illuminate\Config\Repository;
@@ -81,40 +82,65 @@ class Connector
      */
     protected $retries = -1;
 
+    /**
+     * @var string
+     */
+    protected $sessionId;
+    /**
+     * @var LoggerInterface
+     */
+    private $log;
 
-    public function __construct(Repository $config, Application $app, ClientInterface $http, Dispatcher $events)
+
+    public function __construct(
+        Repository $config,
+        Application $app,
+        ClientInterface $http,
+        Dispatcher $events,
+        LoopInterface $loop,
+        LoggerInterface $log
+    )
     {
         $this->token = $config->get('discord.bot-token');
         $this->app = $app;
         $this->http = $http;
         $this->events = $events;
-        $this->loop = Loop::run([$this, 'run']);
+        $this->loop = $loop;
         $this->wsConnector = new WebsocketConnector($this->loop);
+        $this->log = $log;
     }
 
     public function run()
     {
-        if (! $this->app->runningInConsole()) {
+        if (!$this->app->runningInConsole()) {
             throw new RuntimeException('Bot can only run in PHP CLI.');
         }
 
+        $this->log->debug('Starting Gateway request');
+
         $response = (new GatewayRequest())->request();
 
-        $this->url = Arr::get($response, 'url');
+        $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
+                'v' => config('discord.versions.gateway'),
+                'encoding' => 'json'
+            ]);
         // @todo
         $shards = Arr::get($response, 'shards');
+
+        $this->log->debug("Gateway request returned url {$this->url} and shards {$shards}.");
 
         $this->connectWs();
     }
 
     protected function connectWs()
     {
-        dd($this->url, $this->wsConnector, $this->loop);
         ++$this->retries;
 
         if ($this->retries > 5) {
             throw new RuntimeException('Too many retries.');
         }
+
+        $this->log->debug("Setting up websocket connection after {$this->retries} retries.");
 
         $this->wsConnector->__invoke($this->url)->then(
             [$this, 'wsConnected'],
@@ -124,12 +150,11 @@ class Connector
 
     public function wsConnected(WebSocket $socket)
     {
+        $this->log->debug("Socket connected.");
+
         $this->ws = $socket;
-
-        $this->heartbeat = new Heartbeat;
-
+        $this->heartbeat = $this->app->make(Heartbeat::class, [$this->loop]);
         $this->connected = true;
-
         $this->retries = -1;
 
         $socket->on('message', [$this, 'wsMessage']);
@@ -139,6 +164,8 @@ class Connector
 
     public function wsClose(int $code, string $reason)
     {
+        $this->log->alert("Closing connection <$code>: $reason");
+
         $this->connected = false;
 
         $this->events->dispatch(new Events\Ws\Close($code, $reason));
@@ -152,8 +179,10 @@ class Connector
         $this->connectWs();
     }
 
-    public function wsError($e)
+    public function wsError(\Exception $e)
     {
+        $this->log->error("Error {$e->getMessage()}", $e->getTrace());
+
         $this->events->dispatch(new Events\Ws\Error($e));
 
         $this->wsClose(0, 'error');
@@ -161,6 +190,7 @@ class Connector
 
     public function wsMessage(Message $message)
     {
+        $this->log->debug("Message {$message->count()}");
         $this->events->dispatch(new Events\Ws\Message($message));
     }
 
@@ -196,5 +226,27 @@ class Connector
     public function connected(): bool
     {
         return $this->connected;
+    }
+
+    public function identify(bool $resume = true)
+    {
+        $payload = [];
+        Arr::set($payload, 'd.token', $this->token);
+
+        if ($resume && $this->reconnecting && $this->sessionId) {
+            Arr::set($payload, 'op', EventCode::RESUME);
+            Arr::set($payload, 'd.seq', $this->sequence());
+            Arr::set($payload, 'd.session_id', $this->sessionId);
+        } else {
+            Arr::set($payload, 'op', EventCode::IDENTIFY);
+            Arr::set($payload, 'd.compress', true);
+            Arr::set($payload, 'd.properties', [
+                '$os'               => PHP_OS,
+                '$browser'          => $this->http->getUserAgent(),
+                '$device'           => $this->http->getUserAgent(),
+                '$referrer'         => 'https://github.com/teamreflex/DiscordPHP',
+                '$referring_domain' => 'https://github.com/teamreflex/DiscordPHP',
+            ]);
+        }
     }
 }

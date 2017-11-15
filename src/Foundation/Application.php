@@ -5,6 +5,8 @@ namespace Discodian\Core\Foundation;
 use Discodian\Core\Extensions\ExtensionManager;
 use Discodian\Core\Providers\EventProvider;
 use Discodian\Core\Providers\HttpProvider;
+use Discodian\Core\Providers\LogProvider;
+use Discodian\Core\Providers\SocketProvider;
 use Discodian\Core\Socket\Connector;
 use Dotenv\Dotenv;
 use Dotenv\Exception\InvalidPathException;
@@ -60,6 +62,13 @@ class Application extends Container implements Contract
         );
 
         $this->alias(\Illuminate\Contracts\Events\Dispatcher::class, 'events');
+
+        if ($this->runningInConsole()) {
+            $this->alias(
+                \Symfony\Component\Console\Output\ConsoleOutput::class,
+                \Symfony\Component\Console\Output\ConsoleOutputInterface::class
+            );
+        }
     }
 
     protected function setupConfiguration()
@@ -154,8 +163,10 @@ class Application extends Container implements Contract
     public function registerConfiguredProviders()
     {
         foreach ([
+                     LogProvider::class,
                      HttpProvider::class,
                      EventProvider::class,
+                     SocketProvider::class
                  ] as $provider) {
             $this->register($provider);
         }
