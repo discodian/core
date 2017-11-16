@@ -1,5 +1,17 @@
 <?php
 
+/*
+ * This file is part of the Discodian bot toolkit.
+ *
+ * (c) Daniël Klabbers <daniel@klabbers.email>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @see http://discodian.com
+ * @see https://github.com/discodian
+ */
+
 namespace Discodian\Core\Socket;
 
 use React\EventLoop\LoopInterface;
@@ -54,7 +66,7 @@ final class Heartbeat
 
         $this->acknowledgeTimer = $this->loop->addTimer(
             $this->interval / 1000,
-            function() {
+            function () {
                 if (! Connector::connected()) {
                     return;
                 }
