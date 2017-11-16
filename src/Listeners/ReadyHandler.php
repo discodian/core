@@ -54,7 +54,7 @@ class ReadyHandler
         $bot = new Bot($user);
         $bot->session_id = $sessionId;
 
-        $this->app->singleton(Bot::class, function() use ($bot) {
+        $this->app->singleton(Bot::class, function () use ($bot) {
             return $bot;
         });
 
