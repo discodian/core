@@ -26,7 +26,7 @@ class HelloHandler
 
     public function hello(Hello $event)
     {
-        $event->log()->debug("Hello received.", $event->data->d->_trace);
+        logs("Hello received.", $event->data->d->_trace);
 
         $connector = $event->connector();
 

@@ -18,20 +18,26 @@ use Psr\Log\LoggerInterface;
 if (! function_exists('logs')) {
     function logs(...$args)
     {
+        $logger = app(LoggerInterface::class);
+
+        if (! count($args)) {
+            return $logger;
+        }
+
         $type = 'debug';
         $data = [];
 
         foreach ($args as $argument) {
             if (in_array($argument, ['debug', 'info', 'error'])) {
                 $type = $argument;
-            } elseif (is_string($argument)) {
+            } elseif (is_string($argument) || count($args) === 1) {
                 $message = $argument;
             } elseif (is_array($argument)) {
                 $data = $argument;
             }
         }
 
-        app(LoggerInterface::class)->{$type}($message, $data);
+        $logger->{$type}($message, $data);
     }
 }
 

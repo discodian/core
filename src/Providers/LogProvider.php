@@ -36,10 +36,13 @@ class LogProvider extends ServiceProvider
             }
 
             if ($app->runningInConsole()) {
-                $handlers[] = new StreamHandler($app->make(ConsoleOutputInterface::class)->getStream());
+                $handlers[] = new StreamHandler(
+                    $app->make(ConsoleOutputInterface::class)->getStream(),
+                    $app->environment('production') ? Logger::ERROR : Logger::DEBUG
+                );
             }
 
-            return new Logger('Discodian', $handlers);
+            return new Logger($app->userAgent(), $handlers);
         });
     }
 }

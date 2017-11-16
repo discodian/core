@@ -17,7 +17,7 @@ namespace Discodian\Core\Socket;
 use React\EventLoop\LoopInterface;
 use Discodian\Core\Exceptions\MisconfigurationException;
 use Discodian\Core\Socket\Requests\GatewayRequest;
-use Illuminate\Config\Repository;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use GuzzleHttp\ClientInterface;
@@ -106,6 +106,14 @@ class Connector
     protected $sessionId;
 
 
+    /**
+     * Connector constructor.
+     * @param Repository $config
+     * @param Application $app
+     * @param ClientInterface $http
+     * @param Dispatcher $events
+     * @param LoopInterface $loop
+     */
     public function __construct(
         Repository $config,
         Application $app,
@@ -141,6 +149,8 @@ class Connector
         logs("Gateway request returned url {$this->url} and shards {$shards}.");
 
         $this->connectWs();
+
+        $this->loop->run();
     }
 
     protected function connectWs()
@@ -164,7 +174,7 @@ class Connector
         logs("Socket connected.");
 
         $this->ws = $socket;
-        $this->heartbeat = $this->app->make(Heartbeat::class, [$this->loop]);
+        $this->heartbeat = new Heartbeat($this->loop, $this);
         $this->connected = true;
         $this->retries = -1;
 
@@ -185,7 +195,7 @@ class Connector
 
         $this->heartbeat()->cancel();
 
-        if ($code === EventCode::CLOSE_INVALID_TOKEN) {
+        if ($code === Op::CLOSE_INVALID_TOKEN) {
             throw new MisconfigurationException('Invalid token');
         }
 
@@ -205,7 +215,8 @@ class Connector
 
     public function wsMessage(Message $message)
     {
-        logs("Message {$message->count()}");
+        logs("Raw message received {$message->count()}");
+
         $this->events->dispatch(new Events\Ws\Message($message));
     }
 
@@ -232,6 +243,8 @@ class Connector
     public function sequence(int $sequence = null): int
     {
         if ($sequence !== null) {
+            logs("Sequence updated {$this->sequence} => {$sequence}");
+
             $this->sequence = $sequence;
         }
 
@@ -246,14 +259,15 @@ class Connector
     public function identify(bool $resume = true): bool
     {
         $payload = [];
+
         Arr::set($payload, 'd.token', $this->token);
 
         if ($resume && $this->reconnecting && $this->sessionId) {
-            Arr::set($payload, 'op', EventCode::RESUME);
+            Arr::set($payload, 'op', Op::RESUME);
             Arr::set($payload, 'd.seq', $this->sequence());
             Arr::set($payload, 'd.session_id', $this->sessionId);
         } else {
-            Arr::set($payload, 'op', EventCode::IDENTIFY);
+            Arr::set($payload, 'op', Op::IDENTIFY);
             Arr::set($payload, 'd.compress', true);
             Arr::set($payload, 'd.properties', [
                 '$os'               => PHP_OS,
@@ -268,6 +282,6 @@ class Connector
 
         $this->send($payload);
 
-        return $payload['op'] === EventCode::RESUME;
+        return $payload['op'] === Op::RESUME;
     }
 }

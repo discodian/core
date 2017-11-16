@@ -16,8 +16,9 @@ namespace Discodian\Core\Listeners;
 
 use Discodian\Core\Events\Ws as Events;
 use Discodian\Core\Socket\Connector;
-use Discodian\Core\Socket\EventCode;
+use Discodian\Core\Socket\Op;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
 
 class MessageNormalizer
 {
@@ -25,10 +26,15 @@ class MessageNormalizer
      * @var Dispatcher
      */
     protected $events;
+    /**
+     * @var Application
+     */
+    protected $app;
 
-    public function __construct(Dispatcher $events)
+    public function __construct(Dispatcher $events, Application $app)
     {
         $this->events = $events;
+        $this->app = $app;
     }
 
     public function subscribe(Dispatcher $events)
@@ -36,8 +42,9 @@ class MessageNormalizer
         $events->listen(Events\Message::class, [$this, 'normalize']);
     }
 
-    public function normalize(Events\Message $message)
+    public function normalize(Events\Message $event)
     {
+        $message = $event->message;
         $data = $message->getPayload();
 
         if ($message->isBinary()) {
@@ -50,19 +57,27 @@ class MessageNormalizer
             Connector::sequence($data->s);
         }
 
+        logs("Raw message decoded", (array) $data);
+
         $this->events->dispatch('ws.raw', $data);
 
         $codes = [
-            EventCode::DISPATCH => Events\Dispatch::class,
-            EventCode::RECONNECT => Events\Reconnect::class,
-            EventCode::INVALID_SESSION => Events\InvalidSession::class,
-            EventCode::HELLO => Events\Hello::class,
-            EventCode::HEARTBEAT => Events\Heartbeat::class,
-            EventCode::HEARTBEAT_ACK => Events\HeartbeatAcknowledge::class
+            Op::DISPATCH => Events\Dispatch::class,
+            Op::RECONNECT => Events\Reconnect::class,
+            Op::INVALID_SESSION => Events\InvalidSession::class,
+            Op::HELLO => Events\Hello::class,
+            Op::HEARTBEAT => Events\Heartbeat::class,
+            Op::HEARTBEAT_ACK => Events\HeartbeatAcknowledge::class
         ];
 
-        if (isset($codes[$data->op])) {
-            $this->events->dispatch(call_user_func([$codes[$data->op], '__construct'], $data));
+        if (array_key_exists($data->op, $codes)) {
+            logs($data->op);
+            $proxy = $codes[$data->op];
+            logs($data->op);
+            $this->events->dispatch(new $proxy($data));
+            logs($data->op);
+        } else {
+            logs("No action taken for op {$data->op}.");
         }
     }
 }

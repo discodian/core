@@ -49,17 +49,22 @@ final class Heartbeat
      * @var LoopInterface
      */
     protected $loop;
+    /**
+     * @var Connector
+     */
+    protected $connector;
 
-    public function __construct(LoopInterface $loop)
+    public function __construct(LoopInterface $loop, Connector $connector)
     {
         $this->loop = $loop;
+        $this->connector = $connector;
     }
 
     public function beat()
     {
-        Connector::send([
-            'op' => EventCode::HEARTBEAT,
-            'd' => Connector::sequence()
+        $this->connector->send([
+            'op' => Op::HEARTBEAT,
+            'd' => $this->connector->sequence()
         ]);
 
         $this->last = microtime(true);
@@ -67,11 +72,11 @@ final class Heartbeat
         $this->acknowledgeTimer = $this->loop->addTimer(
             $this->interval / 1000,
             function () {
-                if (! Connector::connected()) {
+                if (! $this->connector->connected()) {
                     return;
                 }
 
-                Connector::ws()->close(1001, 'no ack heartbeat received');
+                $this->connector->ws()->close(Op::CLOSE_HEARTBEAT_ACK_MISSING, 'no ack heartbeat received');
             }
         );
     }
@@ -95,9 +100,19 @@ final class Heartbeat
             $this->timer->cancel();
             $this->timer = null;
         }
+        $this->cancelAcknowledgeTimer();
+    }
+
+    public function cancelAcknowledgeTimer()
+    {
         if ($this->acknowledgeTimer) {
             $this->acknowledgeTimer->cancel();
             $this->acknowledgeTimer = null;
         }
+    }
+
+    public function last()
+    {
+        return $this->last;
     }
 }

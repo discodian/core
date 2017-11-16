@@ -23,7 +23,9 @@ use Discodian\Core\Socket\Connector;
 use Dotenv\Dotenv;
 use Dotenv\Exception\InvalidPathException;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Container\Container as ContainerContact;
 use Illuminate\Contracts\Foundation\Application as Contract;
+use Illuminate\Support\Str;
 
 class Application extends Container implements Contract
 {
@@ -45,13 +47,17 @@ class Application extends Container implements Contract
         $this->setupCoreBindings();
         $this->setupConfiguration();
         $this->registerConfiguredProviders();
+
+        $this->singleton(Connector::class);
     }
 
     protected function setupCoreBindings()
     {
         static::setInstance($this);
+
         $this->instance(Container::class, $this);
         $this->alias(Container::class, Contract::class);
+        $this->alias(Container::class, ContainerContact::class);
 
         $this->singleton(
             \Illuminate\Contracts\Config\Repository::class,
@@ -64,14 +70,7 @@ class Application extends Container implements Contract
 
         $this->alias(\GuzzleHttp\Client::class, \GuzzleHttp\ClientInterface::class);
 
-        $this->singleton(Connector::class);
-
-        $this->singleton(
-            \Illuminate\Contracts\Events\Dispatcher::class,
-            function ($app) {
-                return new \Illuminate\Events\Dispatcher($app);
-            }
-        );
+        $this->singleton(\Illuminate\Contracts\Events\Dispatcher::class, \Illuminate\Events\Dispatcher::class);
 
         $this->alias(\Illuminate\Contracts\Events\Dispatcher::class, 'events');
 
@@ -112,12 +111,12 @@ class Application extends Container implements Contract
      *
      * @return string
      */
-    public function version()
+    public function version(): string
     {
         return static::VERSION;
     }
 
-    public function userAgent()
+    public function userAgent(): string
     {
         return 'Discodian/' . $this->version();
     }
@@ -145,11 +144,22 @@ class Application extends Container implements Contract
     /**
      * Get or check the current application environment.
      *
-     * @return string
+     * @return string|bool
      */
     public function environment()
     {
-        // TODO: Implement environment() method.
+        $env = $this['config']->get('core.environment');
+
+        if (func_num_args() > 0) {
+            $patterns = is_array(func_get_arg(0)) ? func_get_arg(0) : func_get_args();
+            foreach ($patterns as $pattern) {
+                if (Str::is($pattern, $env)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return $env;
     }
 
     /**
@@ -157,7 +167,7 @@ class Application extends Container implements Contract
      *
      * @return bool
      */
-    public function runningInConsole()
+    public function runningInConsole(): bool
     {
         return php_sapi_name() == 'cli' || php_sapi_name() == 'phpdbg';
     }
@@ -169,7 +179,7 @@ class Application extends Container implements Contract
      */
     public function isDownForMaintenance()
     {
-        // TODO: Implement isDownForMaintenance() method.
+        return false;
     }
 
     /**

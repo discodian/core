@@ -14,7 +14,7 @@
 
 namespace Discodian\Core\Socket;
 
-class EventCode
+class Op
 {
     // Dispatches an event.
     const DISPATCH = 0;
@@ -60,6 +60,8 @@ class EventCode
     ///////////////////////////////////////
     // Normal close or heartbeat is invalid.
     const CLOSE_NORMAL = 1000;
+
+    const CLOSE_HEARTBEAT_ACK_MISSING = 1001;
     // Abnormal close.
     const CLOSE_ABNORMAL = 1006;
     // Unknown error.

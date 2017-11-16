@@ -21,9 +21,11 @@ use Illuminate\Support\ServiceProvider;
 class EventProvider extends ServiceProvider
 {
     protected $listeners = [
-        Listeners\MessageNormalizer::class,
+        Listeners\DispatchHandler::class,
+        Listeners\HeartbeatHandler::class,
         Listeners\HelloHandler::class,
-        Listeners\DispatchHandler::class
+        Listeners\MessageNormalizer::class,
+        Listeners\ReadyHandler::class,
     ];
 
     public function register()

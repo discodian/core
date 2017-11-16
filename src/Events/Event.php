@@ -39,7 +39,7 @@ abstract class Event
 
     public function log(): LoggerInterface
     {
-        return app(LoggerInterface::class);
+        return logs();
     }
 
     public function connector(): Connector
