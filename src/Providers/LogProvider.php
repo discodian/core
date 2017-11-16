@@ -18,7 +18,8 @@ class LogProvider extends ServiceProvider
 
             if ($path = config('log.path')) {
                 $handlers[] = new StreamHandler(
-                    sprintf('%s%s.log', $path , date('Y-m-d'))
+                    sprintf('%s%s.log', $path , date('Y-m-d')),
+                    Logger::INFO
                 );
             }
 

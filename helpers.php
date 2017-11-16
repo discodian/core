@@ -1,6 +1,27 @@
 <?php
 
 use Illuminate\Container\Container;
+use Psr\Log\LoggerInterface;
+
+if (! function_exists('logs')) {
+    function logs(...$args)
+    {
+        $type = 'debug';
+        $data = [];
+
+        foreach ($args as $argument) {
+            if (in_array($argument, ['debug', 'info', 'error'])) {
+                $type = $argument;
+            } elseif (is_string($argument)) {
+                $message = $argument;
+            } elseif (is_array($argument)) {
+                $data = $argument;
+            }
+        }
+
+        app(LoggerInterface::class)->{$type}($message, $data);
+    }
+}
 
 if (! function_exists('app')) {
     /**

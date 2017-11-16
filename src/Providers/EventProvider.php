@@ -9,7 +9,9 @@ use Illuminate\Support\ServiceProvider;
 class EventProvider extends ServiceProvider
 {
     protected $listeners = [
-        Listeners\MessageNormalizer::class
+        Listeners\MessageNormalizer::class,
+        Listeners\HelloHandler::class,
+        Listeners\DispatchHandler::class
     ];
 
     public function register()

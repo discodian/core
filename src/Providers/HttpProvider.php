@@ -35,7 +35,7 @@ class HttpProvider extends ServiceProvider
             ],
             'headers' => [
                 'Content-Type' => 'application/json',
-                'User-Agent' => 'Discodian/' . $app->version(),
+                'User-Agent' => $app->userAgent(),
                 'Authorization' => 'Bot ' . $config->get('discord.bot-token')
             ]
         ]);

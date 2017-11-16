@@ -105,6 +105,11 @@ class Application extends Container implements Contract
         return static::VERSION;
     }
 
+    public function userAgent()
+    {
+        return 'Discodian/' . $this->version();
+    }
+
     /**
      * Get the base path of the Laravel installation.
      *
