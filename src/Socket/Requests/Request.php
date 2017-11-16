@@ -1,5 +1,17 @@
 <?php
 
+/*
+ * This file is part of the Discodian bot toolkit.
+ *
+ * (c) Daniël Klabbers <daniel@klabbers.email>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @see http://discodian.com
+ * @see https://github.com/discodian
+ */
+
 namespace Discodian\Core\Socket\Requests;
 
 use GuzzleHttp\ClientInterface;
@@ -28,7 +40,7 @@ abstract class Request extends Fluent
     /**
      * @var ClientInterface
      */
-    static protected $client;
+    protected static $client;
 
     final public function request()
     {
@@ -42,7 +54,6 @@ abstract class Request extends Fluent
 
             return $payload;
         } else {
-
         }
     }
 
@@ -61,12 +72,12 @@ abstract class Request extends Fluent
         }
     }
 
-    static public function setClient(ClientInterface $client)
+    public static function setClient(ClientInterface $client)
     {
         static::$client = $client;
     }
 
-    static public function getClient(): ClientInterface
+    public static function getClient(): ClientInterface
     {
         if (! static::$client) {
             static::$client = app(ClientInterface::class);
