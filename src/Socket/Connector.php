@@ -112,8 +112,7 @@ class Connector
         ClientInterface $http,
         Dispatcher $events,
         LoopInterface $loop
-    )
-    {
+    ) {
         $this->token = $config->get('discord.bot-token');
         $this->app = $app;
         $this->http = $http;
