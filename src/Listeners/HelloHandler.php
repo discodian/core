@@ -26,12 +26,14 @@ class HelloHandler
 
     public function hello(Hello $event)
     {
-        logs("Hello received.", $event->data->d->_trace);
+        $data = $event->data->d;
+
+        logs("Hello received, heartbeat interval at {$data->heartbeat_interval}.", $data->_trace);
 
         $connector = $event->connector();
 
         if (!$connector->identify()) {
-            $connector->heartbeat()->setup($event->data->d->heartbeat_interval);
+            $connector->heartbeat()->setup($data->heartbeat_interval);
         }
     }
 }

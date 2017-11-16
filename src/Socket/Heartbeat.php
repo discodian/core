@@ -62,9 +62,11 @@ final class Heartbeat
 
     public function beat()
     {
+        $sequence = $this->connector->sequence();
+
         $this->connector->send([
             'op' => Op::HEARTBEAT,
-            'd' => $this->connector->sequence()
+            'd' => $sequence
         ]);
 
         $this->last = microtime(true);
@@ -73,12 +75,16 @@ final class Heartbeat
             $this->interval / 1000,
             function () {
                 if (! $this->connector->connected()) {
+                    logs("Acknowledge timer ran out, connected was no longer available.");
+
                     return;
                 }
 
-                $this->connector->ws()->close(Op::CLOSE_HEARTBEAT_ACK_MISSING, 'no ack heartbeat received');
+                $this->connector->wsClose(Op::CLOSE_HEARTBEAT_ACK_MISSING, 'no ack heartbeat received');
             }
         );
+
+        logs("Heartbeat sent at {$this->last} for sequence {$sequence}.");
     }
 
     public function setup(int $interval)
@@ -86,11 +92,12 @@ final class Heartbeat
         $this->interval = $interval;
 
         if ($this->timer) {
+            logs("Stopped existing heartbeat timer due to new being setup with interval $interval.");
             $this->timer->cancel();
             $this->timer = null;
         }
 
-        $this->timer = $this->loop->addPeriodicTimer($interval, [$this, 'beat']);
+        $this->timer = $this->loop->addPeriodicTimer($interval/1000, [$this, 'beat']);
         $this->beat();
     }
 
@@ -99,6 +106,8 @@ final class Heartbeat
         if ($this->timer) {
             $this->timer->cancel();
             $this->timer = null;
+
+            logs("Timer cancelled.");
         }
         $this->cancelAcknowledgeTimer();
     }
@@ -108,6 +117,8 @@ final class Heartbeat
         if ($this->acknowledgeTimer) {
             $this->acknowledgeTimer->cancel();
             $this->acknowledgeTimer = null;
+
+            logs("Acknowledge timer cancelled.");
         }
     }
 

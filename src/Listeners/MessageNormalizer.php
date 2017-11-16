@@ -15,10 +15,8 @@
 namespace Discodian\Core\Listeners;
 
 use Discodian\Core\Events\Ws as Events;
-use Discodian\Core\Socket\Connector;
 use Discodian\Core\Socket\Op;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Foundation\Application;
 
 class MessageNormalizer
 {
@@ -26,15 +24,10 @@ class MessageNormalizer
      * @var Dispatcher
      */
     protected $events;
-    /**
-     * @var Application
-     */
-    protected $app;
 
-    public function __construct(Dispatcher $events, Application $app)
+    public function __construct(Dispatcher $events)
     {
         $this->events = $events;
-        $this->app = $app;
     }
 
     public function subscribe(Dispatcher $events)
@@ -54,10 +47,15 @@ class MessageNormalizer
         $data = json_decode($data);
 
         if (isset($data->s)) {
-            Connector::sequence($data->s);
+            $event->connector()->sequence($data->s);
         }
 
-        logs("Raw message decoded", (array) $data);
+        logs(
+            "Raw message decoded (size: {$message->getPayloadLength()})",
+            $message->getPayloadLength() < 500 ?
+                (array)$data :
+                []
+        );
 
         $this->events->dispatch('ws.raw', $data);
 
@@ -71,11 +69,8 @@ class MessageNormalizer
         ];
 
         if (array_key_exists($data->op, $codes)) {
-            logs($data->op);
-            $proxy = $codes[$data->op];
-            logs($data->op);
-            $this->events->dispatch(new $proxy($data));
-            logs($data->op);
+            $class = $codes[$data->op];
+            $this->events->dispatch(new $class($data));
         } else {
             logs("No action taken for op {$data->op}.");
         }

@@ -76,7 +76,7 @@ class Connector
      *
      * @var int
      */
-    protected $sequence;
+    protected $sequence = 0;
 
     /**
      * @var Dispatcher
@@ -256,6 +256,10 @@ class Connector
         return $this->connected;
     }
 
+    /**
+     * @param bool $resume
+     * @return bool Whether we're resuming.
+     */
     public function identify(bool $resume = true): bool
     {
         $payload = [];
@@ -282,6 +286,13 @@ class Connector
 
         $this->send($payload);
 
+        logs('Identified.', ['resume' => $payload['op'] === Op::RESUME]);
+
         return $payload['op'] === Op::RESUME;
+    }
+
+    public function __destruct()
+    {
+        $this->wsClose(Op::CLOSE_ABNORMAL, 'Terminated.');
     }
 }

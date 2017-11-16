@@ -15,6 +15,7 @@
 namespace Discodian\Core\Listeners;
 
 use Discodian\Core\Events\Ws\Ready;
+use Discodian\Core\Resources\Bot;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 
@@ -41,11 +42,22 @@ class ReadyHandler
 
         $content = $event->data->d;
 
-        $this->bot($content->session_id, $content->user);
+        $bot = $this->bot($content->session_id, $content->user);
+
+        logs("Bot {$bot->username} is ready.");
+
+        // @todo Guilds
     }
 
-    protected function bot(string $sessionId, $user)
+    protected function bot(string $sessionId, $user): Bot
     {
-        dd($sessionId, $user);
+        $bot = new Bot($user);
+        $bot->session_id = $sessionId;
+
+        $this->app->singleton(Bot::class, function() use ($bot) {
+            return $bot;
+        });
+
+        return $this->app->make(Bot::class);
     }
 }

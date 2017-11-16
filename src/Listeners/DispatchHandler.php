@@ -15,11 +15,22 @@
 namespace Discodian\Core\Listeners;
 
 use Discodian\Core\Events\Ws\Dispatch;
+use Discodian\Core\Events\Ws\Ready;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Str;
 
 class DispatchHandler
 {
+    /**
+     * @var Dispatcher
+     */
+    protected $events;
+
+    public function __construct(Dispatcher $events)
+    {
+        $this->events = $events;
+    }
+
     public function subscribe(Dispatcher $events)
     {
         $events->listen(Dispatch::class, [$this, 'dispatch']);
@@ -27,15 +38,18 @@ class DispatchHandler
 
     public function dispatch(Dispatch $event)
     {
-        $readableEvent = Str::camel($event->data->t);
-        logs("Received dispatch event {$readableEvent}", (array) $event);
+        $readableEvent = Str::studly($event->data->t);
+        logs("Received dispatch event {$readableEvent}");
 
         if (method_exists($this, $readableEvent)) {
             $this->{$readableEvent}($event);
+        } else {
+            logs("No dispatch found for $readableEvent");
         }
     }
 
-    public function ready(Dispath $event)
+    public function ready(Dispatch $event)
     {
+        $this->events->dispatch(new Ready($event->data));
     }
 }
