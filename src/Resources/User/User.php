@@ -12,14 +12,19 @@
  * @see https://github.com/discodian
  */
 
-namespace Discodian\Core\Resources;
+namespace Discodian\Core\Resources\User;
 
-use Discodian\Core\Resources\User\User;
+use Discodian\Core\Resources\Part;
 
 /**
- * {@inheritdoc}
+ * @property string $username
+ * @property bool $verified
+ * @property null $email
+ * @property string $discriminator
+ * @property string $avatar
+ * @property bool $bot
  * @property string $session_id
  */
-class Bot extends User
+class User extends Part
 {
 }

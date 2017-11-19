@@ -39,9 +39,9 @@ class DispatchHandler
     public function dispatch(Dispatch $event)
     {
         $readableEvent = Str::studly($event->data->t);
-        logs("Received dispatch event {$readableEvent}");
 
         if (method_exists($this, $readableEvent)) {
+            logs("Dispatching event {$readableEvent}");
             $this->{$readableEvent}($event);
         } else {
             logs("No dispatch found for $readableEvent");

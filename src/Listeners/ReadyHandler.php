@@ -46,7 +46,7 @@ class ReadyHandler
 
         logs("Bot {$bot->username} is ready.");
 
-        // @todo Guilds
+        $this->guilds($content->guilds);
     }
 
     protected function bot(string $sessionId, $user): Bot
@@ -59,5 +59,12 @@ class ReadyHandler
         });
 
         return $this->app->make(Bot::class);
+    }
+
+    protected function guilds(array $guilds)
+    {
+        foreach ($guilds as $guild) {
+
+        }
     }
 }
