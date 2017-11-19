@@ -64,7 +64,6 @@ class ReadyHandler
     protected function guilds(array $guilds)
     {
         foreach ($guilds as $guild) {
-
         }
     }
 }
