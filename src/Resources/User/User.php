@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Resources\User;
 
+use Discodian\Core\Database\Persists;
 use Discodian\Core\Resources\Part;
 
 /**
@@ -23,8 +24,8 @@ use Discodian\Core\Resources\Part;
  * @property string $discriminator
  * @property string $avatar
  * @property bool $bot
- * @property string $session_id
  */
 class User extends Part
 {
+    use Persists;
 }

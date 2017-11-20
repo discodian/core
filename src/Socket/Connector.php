@@ -14,19 +14,20 @@
 
 namespace Discodian\Core\Socket;
 
-use React\EventLoop\LoopInterface;
+use Discodian\Core\Events;
 use Discodian\Core\Exceptions\MisconfigurationException;
 use Discodian\Core\Socket\Requests\GatewayRequest;
+use GuzzleHttp\ClientInterface;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
-use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Arr;
+use Ratchet\Client\Connector as WebsocketConnector;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\Message;
+use React\EventLoop\LoopInterface;
+use function React\Promise\resolve;
 use RuntimeException;
-use Ratchet\Client\Connector as WebsocketConnector;
-use Discodian\Core\Events;
 
 class Connector
 {
@@ -120,7 +121,8 @@ class Connector
         ClientInterface $http,
         Dispatcher $events,
         LoopInterface $loop
-    ) {
+    )
+    {
         $this->token = $config->get('discord.bot-token');
         $this->app = $app;
         $this->http = $http;
@@ -137,20 +139,23 @@ class Connector
 
         logs('Starting Gateway request');
 
-        $response = (new GatewayRequest())->request();
+        $request = (new GatewayRequest())->request();
+        
+        $request->then(function ($response) {
+            dd($response, "RESPONSE");
+                $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
+                        'v' => config('discord.versions.gateway'),
+                        'encoding' => 'json'
+                    ]);
+                // @todo sharding implementation.
+                $shards = Arr::get($response, 'shards');
 
-        $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
-                'v' => config('discord.versions.gateway'),
-                'encoding' => 'json'
-            ]);
-        // @todo
-        $shards = Arr::get($response, 'shards');
+                logs("Gateway request returned url {$this->url} and shards {$shards}.");
 
-        logs("Gateway request returned url {$this->url} and shards {$shards}.");
+                $this->connectWs();
+            });
 
-        $this->connectWs();
-
-        $this->loop->run();
+        resolve($request);
     }
 
     protected function connectWs()
@@ -274,10 +279,10 @@ class Connector
             Arr::set($payload, 'op', Op::IDENTIFY);
             Arr::set($payload, 'd.compress', true);
             Arr::set($payload, 'd.properties', [
-                '$os'               => PHP_OS,
-                '$browser'          => $this->app->userAgent(),
-                '$device'           => $this->app->userAgent(),
-                '$referrer'         => 'http://discodian.com',
+                '$os' => PHP_OS,
+                '$browser' => $this->app->userAgent(),
+                '$device' => $this->app->userAgent(),
+                '$referrer' => 'http://discodian.com',
                 '$referring_domain' => 'http://discodian.com',
             ]);
         }
@@ -293,6 +298,6 @@ class Connector
 
     public function __destruct()
     {
-        $this->wsClose(Op::CLOSE_ABNORMAL, 'Terminated.');
+//        $this->wsClose(Op::CLOSE_ABNORMAL, 'Terminated.');
     }
 }

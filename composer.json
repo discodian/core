@@ -13,9 +13,12 @@
     "require": {
         "php": ">= 7.1",
         "illuminate/support": "5.5.*",
+        "illuminate/cache": "5.5.*",
         "illuminate/config": "5.5.*",
         "illuminate/container": "5.5.*",
+        "illuminate/database": "5.5.*",
         "illuminate/events": "5.5.*",
+        "illuminate/filesystem": "5.5.*",
         "symfony/console": "^3.3.12",
         "vlucas/phpdotenv": "^2.4.0",
         "guzzlehttp/guzzle": "^6.3.0",

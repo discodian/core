@@ -15,7 +15,8 @@
 namespace Discodian\Core\Socket\Requests;
 
 use GuzzleHttp\ClientInterface;
-use Illuminate\Support\Fluent;
+use React\Promise\Promise;
+use React\Promise\Deferred;
 use Symfony\Component\HttpFoundation\HeaderBag;
 
 /**
@@ -23,8 +24,12 @@ use Symfony\Component\HttpFoundation\HeaderBag;
  * @property int $rate_remaining
  * @property int $rate_reset
  */
-abstract class Request extends Fluent
+abstract class Request
 {
+    protected $rate_limit;
+    protected $rate_reset;
+    protected $rate_remaining;
+
     /**
      * Path to send request to.
      *
@@ -40,24 +45,34 @@ abstract class Request extends Fluent
     /**
      * @var ClientInterface
      */
-    protected static $client;
+    protected static $http;
 
-    final public function request()
+    /**
+     * @param string|null $method
+     * @param string|null $path
+     * @return Promise
+     */
+    public function request(string $method = null, string $path = null)
     {
-        $response = static::getClient()->request($this->method, $this->path);
+        $defer = new Deferred();
 
-        $this->processRateLimits(new HeaderBag($response->getHeaders()));
+        static::getHttp()
+            ->requestAsync($method ?? $this->method, $path ?? $this->path)
+            ->then(function ($response) use (&$defer) {
+                $this->processRateLimits(new HeaderBag($response->getHeaders()));
 
-        if ($response->getStatusCode() === 200) {
-            $payload = $response->getBody()->getContents();
-            $payload = \json_decode($payload, true);
+                $defer->resolve($response);
+            }, function ($e) use ($defer) {
+                $defer->reject($e);
+            });
 
-            return $payload;
-        } else {
-        }
+        return $defer->promise();
     }
 
-    final protected function processRateLimits(HeaderBag $headers)
+    /**
+     * @param HeaderBag $headers
+     */
+    protected function processRateLimits(HeaderBag $headers)
     {
         if ($headers->has('x-ratelimit-limit')) {
             $this->rate_limit = $headers->get('x-ratelimit-limit');
@@ -72,17 +87,23 @@ abstract class Request extends Fluent
         }
     }
 
-    public static function setClient(ClientInterface $client)
+    /**
+     * @param ClientInterface $client
+     */
+    public static function setHttp(ClientInterface $client)
     {
-        static::$client = $client;
+        static::$http = $client;
     }
 
-    public static function getClient(): ClientInterface
+    /**
+     * @return ClientInterface
+     */
+    public static function getHttp(): ClientInterface
     {
-        if (! static::$client) {
-            static::$client = app(ClientInterface::class);
+        if (!static::$http) {
+            static::$http = app(ClientInterface::class);
         }
 
-        return static::$client;
+        return static::$http;
     }
 }

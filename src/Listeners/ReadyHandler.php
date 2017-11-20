@@ -16,6 +16,8 @@ namespace Discodian\Core\Listeners;
 
 use Discodian\Core\Events\Ws\Ready;
 use Discodian\Core\Resources\Bot;
+use Discodian\Core\Resources\Guild\Guild;
+use Discodian\Core\Socket\Requests\ResourceRequest;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 
@@ -44,9 +46,15 @@ class ReadyHandler
 
         $bot = $this->bot($content->session_id, $content->user);
 
-        logs("Bot {$bot->username} is ready.");
-
         $this->guilds($content->guilds);
+
+        logs(sprintf("Bot \"%s:%s\" is ready on %d Guilds.",
+            $bot->username,
+            $bot->discriminator,
+            count($content->guilds)
+        ));
+
+        logs("Bot \"{$bot->username}:{$bot->discriminator}\" is ready.");
     }
 
     protected function bot(string $sessionId, $user): Bot
@@ -64,6 +72,8 @@ class ReadyHandler
     protected function guilds(array $guilds)
     {
         foreach ($guilds as $guild) {
+            $resource = (new ResourceRequest())->setPart(Guild::class)->get($guild);
+            dd($resource);
         }
     }
 }

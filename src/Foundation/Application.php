@@ -15,6 +15,8 @@
 namespace Discodian\Core\Foundation;
 
 use Discodian\Core\Extensions\ExtensionManager;
+use Discodian\Core\Providers\CacheProvider;
+use Discodian\Core\Providers\DatabaseProvider;
 use Discodian\Core\Providers\EventProvider;
 use Discodian\Core\Providers\HttpProvider;
 use Discodian\Core\Providers\LogProvider;
@@ -25,6 +27,7 @@ use Dotenv\Exception\InvalidPathException;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\Container as ContainerContact;
 use Illuminate\Contracts\Foundation\Application as Contract;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Str;
 
 class Application extends Container implements Contract
@@ -54,6 +57,7 @@ class Application extends Container implements Contract
     protected function setupCoreBindings()
     {
         static::setInstance($this);
+        Facade::setFacadeApplication($this);
 
         $this->instance(Container::class, $this);
         $this->alias(Container::class, Contract::class);
@@ -74,12 +78,10 @@ class Application extends Container implements Contract
 
         $this->alias(\Illuminate\Contracts\Events\Dispatcher::class, 'events');
 
-        if ($this->runningInConsole()) {
-            $this->alias(
-                \Symfony\Component\Console\Output\ConsoleOutput::class,
-                \Symfony\Component\Console\Output\ConsoleOutputInterface::class
-            );
-        }
+        $this->alias(\Symfony\Component\Console\Output\ConsoleOutput::class, \Symfony\Component\Console\Output\ConsoleOutputInterface::class);
+
+        $this->bind(\Illuminate\Contracts\Filesystem\Filesystem::class, \Illuminate\Filesystem\Filesystem::class);
+        $this->alias(\Illuminate\Contracts\Filesystem\Filesystem::class, 'files');
     }
 
     protected function setupConfiguration()
@@ -159,6 +161,7 @@ class Application extends Container implements Contract
             }
             return false;
         }
+
         return $env;
     }
 
@@ -193,7 +196,9 @@ class Application extends Container implements Contract
                      LogProvider::class,
                      HttpProvider::class,
                      EventProvider::class,
-                     SocketProvider::class
+                     SocketProvider::class,
+                     CacheProvider::class,
+                     DatabaseProvider::class,
                  ] as $provider) {
             $this->register($provider);
         }
