@@ -85,14 +85,14 @@ class ResourceRequest extends Request
 
     public function callEndpoint($name, $arguments)
     {
-        if($endpoint = Arr::get($this->getHttpEndpoints(), $name)) {
+        if ($endpoint = Arr::get($this->getHttpEndpoints(), $name)) {
             dd($endpoint);
         }
     }
 
     public function __call($name, $arguments)
     {
-        if($response = $this->callEndpoint($name, $arguments)) {
+        if ($response = $this->callEndpoint($name, $arguments)) {
             return $response;
         }
 

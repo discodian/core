@@ -121,8 +121,7 @@ class Connector
         ClientInterface $http,
         Dispatcher $events,
         LoopInterface $loop
-    )
-    {
+    ) {
         $this->token = $config->get('discord.bot-token');
         $this->app = $app;
         $this->http = $http;
@@ -143,17 +142,17 @@ class Connector
         
         $request->then(function ($response) {
             dd($response, "RESPONSE");
-                $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
+            $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
                         'v' => config('discord.versions.gateway'),
                         'encoding' => 'json'
                     ]);
-                // @todo sharding implementation.
-                $shards = Arr::get($response, 'shards');
+            // @todo sharding implementation.
+            $shards = Arr::get($response, 'shards');
 
-                logs("Gateway request returned url {$this->url} and shards {$shards}.");
+            logs("Gateway request returned url {$this->url} and shards {$shards}.");
 
-                $this->connectWs();
-            });
+            $this->connectWs();
+        });
 
         resolve($request);
     }
