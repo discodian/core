@@ -18,6 +18,7 @@ use Discodian\Core\Events;
 use Discodian\Core\Exceptions\MisconfigurationException;
 use Discodian\Core\Socket\Requests\GatewayRequest;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
@@ -128,9 +129,11 @@ class Connector
         $this->events = $events;
         $this->loop = $loop;
         $this->wsConnector = new WebsocketConnector($this->loop);
+
+        $this->setup();
     }
 
-    public function run()
+    protected function setup()
     {
         if (!$this->app->runningInConsole()) {
             throw new RuntimeException('Bot can only run in PHP CLI.');
@@ -138,10 +141,9 @@ class Connector
 
         logs('Starting Gateway request');
 
-        $request = (new GatewayRequest())->request();
-        
-        $request->then(function ($response) {
-            dd($response, "RESPONSE");
+        $promise = (new GatewayRequest())->request();
+
+        $promise->then(function ($response) {
             $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
                         'v' => config('discord.versions.gateway'),
                         'encoding' => 'json'
@@ -152,9 +154,17 @@ class Connector
             logs("Gateway request returned url {$this->url} and shards {$shards}.");
 
             $this->connectWs();
+        })
+        ->otherwise(function ($e) {
+            $this->wsClose(Op::CLOSE_ABNORMAL, $e);
         });
 
-        resolve($request);
+        $promise->wait();
+    }
+
+    public function run()
+    {
+        $this->loop->run();
     }
 
     protected function connectWs()

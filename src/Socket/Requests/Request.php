@@ -15,8 +15,8 @@
 namespace Discodian\Core\Socket\Requests;
 
 use GuzzleHttp\ClientInterface;
-use React\Promise\Promise;
-use React\Promise\Deferred;
+use GuzzleHttp\Promise\Promise;
+use GuzzleHttp\Psr7\Response;
 use Symfony\Component\HttpFoundation\HeaderBag;
 
 /**
@@ -48,25 +48,23 @@ abstract class Request
     protected static $http;
 
     /**
-     * @param string|null $method
-     * @param string|null $path
      * @return Promise
      */
-    public function request(string $method = null, string $path = null)
+    public function request()
     {
-        $defer = new Deferred();
-
-        static::getHttp()
+        return static::getHttp()
             ->requestAsync($method ?? $this->method, $path ?? $this->path)
-            ->then(function ($response) use (&$defer) {
+            ->then(function (Response $response) {
                 $this->processRateLimits(new HeaderBag($response->getHeaders()));
 
-                $defer->resolve($response);
-            }, function ($e) use ($defer) {
-                $defer->reject($e);
-            });
+                if ($response->getHeaderLine('content-type') === 'application/json') {
+                    return \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
+                }
 
-        return $defer->promise();
+                return $response;
+            }, function (\Exception $e)  {
+                logs("Request failed {$e->getMessage()}", $e->getTrace());
+            });
     }
 
     /**
