@@ -23,7 +23,7 @@ class VoiceStateUpdate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $state = $this->factory->create(VoiceStateUpdatePart::class, $data, true);
 

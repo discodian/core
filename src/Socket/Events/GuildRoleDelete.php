@@ -22,7 +22,7 @@ class GuildRoleDelete extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $guild = $this->discord->guilds->get('id', $data->guild_id);
         $guild->roles->pull($data->role_id);

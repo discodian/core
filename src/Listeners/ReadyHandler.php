@@ -15,6 +15,7 @@
 namespace Discodian\Core\Listeners;
 
 use Discodian\Core\Events\Ws\Ready;
+use Discodian\Core\Socket\Events\GuildCreate;
 use Discodian\Parts\Bot;
 use Discodian\Parts\Guild\Guild;
 use Discodian\Core\Requests\ResourceRequest;
@@ -73,7 +74,8 @@ class ReadyHandler
     protected function guilds(array $guilds)
     {
         $unavailable = collect();
-        dd($guilds);
+        $event = $this->app->make(GuildCreate::class);
+
         foreach ($guilds as $guild) {
             $defer = new Deferred;
 
@@ -83,7 +85,7 @@ class ReadyHandler
                 }
             });
 
-            dd($defer->resolve($guild));
+            $event($defer, $guild);
         }
     }
 }

@@ -24,7 +24,7 @@ class MessageUpdate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $messagePart = $this->factory->create(Message::class, $data, true);
 

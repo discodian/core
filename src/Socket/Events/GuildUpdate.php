@@ -25,7 +25,7 @@ class GuildUpdate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         if (isset($data->unavailable) && $data->unavailable) {
             $deferred->notify('Guild is unavailable.');

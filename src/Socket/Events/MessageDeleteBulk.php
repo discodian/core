@@ -23,7 +23,7 @@ class MessageDeleteBulk extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $messages = $this->discord->getRepository(
             MessageRepository::class,

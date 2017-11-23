@@ -23,7 +23,7 @@ class VoiceServerUpdate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $part = $this->factory->create(VoiceServerUpdatePart::class, $data, true);
 

@@ -23,7 +23,7 @@ class ChannelDelete extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $channel = $this->factory->create(Channel::class, $data);
 

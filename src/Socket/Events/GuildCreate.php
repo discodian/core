@@ -17,14 +17,10 @@ namespace Discodian\Core\Socket\Events;
 use Discodian\Core\Socket\Event;
 use Discodian\Parts\Guild\Channel;
 use Discodian\Parts\Guild\Guild;
-use Discord\Parts\Guild\Ban;
-use Discord\Parts\Guild\Role;
-use Discord\Parts\User\Member;
+use Discodian\Parts\Guild\Ban;
+use Discodian\Parts\Guild\Role;
+use Discodian\Parts\Guild\Member;
 use Discord\Parts\WebSockets\VoiceStateUpdate as VoiceStateUpdatePart;
-use Discord\Repository\Guild\BanRepository;
-use Discord\Repository\Guild\ChannelRepository;
-use Discord\Repository\Guild\MemberRepository;
-use Discord\Repository\Guild\RoleRepository;
 use React\Promise\Deferred;
 
 class GuildCreate extends Event
@@ -32,7 +28,7 @@ class GuildCreate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         if (isset($data->unavailable) && $data->unavailable) {
             $deferred->reject(['unavailable', $data->id]);

@@ -23,7 +23,7 @@ class GuildRoleUpdate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $adata             = (array) $data->role;
         $adata['guild_id'] = $data->guild_id;

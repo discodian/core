@@ -23,7 +23,7 @@ class TypingStart extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $typing = $this->factory->create(TypingStartPart::class, $data, true);
 

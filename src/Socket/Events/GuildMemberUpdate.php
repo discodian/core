@@ -23,7 +23,7 @@ class GuildMemberUpdate extends Event
     /**
      * {@inheritdoc}
      */
-    public function __invoke(Deferred $deferred, array $data)
+    public function __invoke(Deferred $deferred, \stdClass $data)
     {
         $memberPart = $this->factory->create(Member::class, $data, true);
         $old        = null;

@@ -65,5 +65,5 @@ abstract class Event
         $this->http = $http;
     }
 
-    abstract public function __invoke(Deferred $deferred, array $data);
+    abstract public function __invoke(Deferred $deferred, \stdClass $data);
 }
