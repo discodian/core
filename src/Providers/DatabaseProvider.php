@@ -23,10 +23,9 @@ class DatabaseProvider extends ServiceProvider
 {
     public function register()
     {
-        if (config('database.default', false) !== false) {
+        if (config('database.default')) {
             $this->app->register(DatabaseServiceProvider::class);
             $this->app->register(MigrationServiceProvider::class);
-
 
             $this->update();
         }

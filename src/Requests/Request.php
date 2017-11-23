@@ -62,7 +62,7 @@ abstract class Request
                 }
 
                 return $response;
-            }, function (\Exception $e)  {
+            }, function (\Exception $e) {
                 logs("Request failed {$e->getMessage()}", $e->getTrace());
             });
     }
