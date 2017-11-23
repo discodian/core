@@ -73,7 +73,7 @@ class ReadyHandler
     protected function guilds(array $guilds)
     {
         $unavailable = collect();
-dd($guilds);
+        dd($guilds);
         foreach ($guilds as $guild) {
             $defer = new Deferred;
 
