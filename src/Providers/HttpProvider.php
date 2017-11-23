@@ -20,7 +20,6 @@ use GuzzleHttp\ClientInterface;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use Discodian\Core\Resources;
 
 class HttpProvider extends ServiceProvider
 {
@@ -28,8 +27,6 @@ class HttpProvider extends ServiceProvider
     {
         $this->app->singleton(ClientInterface::class, function ($app) {
             $config = $app->make('config');
-
-            $this->endpoints($config);
 
             return $this->setupClient($app, $config);
         });
@@ -60,31 +57,5 @@ class HttpProvider extends ServiceProvider
         ]);
 
         return $client;
-    }
-
-    /**
-     * Provides a list of all Discord API endpoints our resources can use.
-     *
-     * @info A boolean true will auto generate the path based on some intelligence.
-     *
-     * @param Repository $config
-     */
-    protected function endpoints(Repository $config)
-    {
-        $endpoints = [
-            Resources\User::class => [
-                'get' => true
-            ],
-            Resources\Guild\Guild::class => [
-                'all' => 'users/@me/guilds',
-                'get' => true,
-                'create' => true,
-                'update' => true,
-                'delete' => true,
-                'leave' => 'users/@me/guilds/{id}'
-            ]
-        ];
-
-        $config->set('discord.http.endpoints', $endpoints);
     }
 }

@@ -14,6 +14,8 @@
 
 namespace Discodian\Core\Providers;
 
+use Discodian\Core\Events\Log\RegistersHandlers;
+use Discodian\Core\Events\Log\RegistersLogger;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Monolog\Handler\StreamHandler;
@@ -42,7 +44,13 @@ class LogProvider extends ServiceProvider
                 );
             }
 
-            return new Logger($app->userAgent(), $handlers);
+            $app['events']->dispatch(new RegistersHandlers($handlers));
+
+            $logger = new Logger($app->userAgent(), $handlers);
+
+            $app['events']->dispatch(new RegistersLogger($logger));
+
+            return $logger;
         });
     }
 }

@@ -14,9 +14,6 @@
 
 namespace Discodian\Core\Database;
 
-/**
- * @property bool $persisted
- */
 trait Persists
 {
     public function save(): bool
@@ -25,8 +22,16 @@ trait Persists
             return false;
         }
 
-        $save = new SaveResource($this);
+        return $this->persisted()->save();
+    }
 
-        return $save();
+    public function delete()
+    {
+        return $this->persisted()->delete();
+    }
+
+    public function persisted(): Resource
+    {
+        return Resource::forPart($this);
     }
 }

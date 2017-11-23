@@ -12,11 +12,10 @@
  * @see https://github.com/discodian
  */
 
-namespace Discodian\Core\Socket\Requests;
+namespace Discodian\Core\Requests;
 
 use Discodian\Core\Database\Persists;
-use Discodian\Core\Resources\Part;
-use Illuminate\Support\Arr;
+use Discodian\Parts\Part;
 
 class ResourceRequest extends Request
 {
@@ -70,32 +69,7 @@ class ResourceRequest extends Request
     public function setPart(string $part): ResourceRequest
     {
         $this->part = $part;
+
         return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHttpEndpoints(): array
-    {
-        $config = config('discord.http.endpoints', []);
-
-        return Arr::get($config, $this->part);
-    }
-
-    public function callEndpoint($name, $arguments)
-    {
-        if ($endpoint = Arr::get($this->getHttpEndpoints(), $name)) {
-            dd($endpoint);
-        }
-    }
-
-    public function __call($name, $arguments)
-    {
-        if ($response = $this->callEndpoint($name, $arguments)) {
-            return $response;
-        }
-
-        return parent::__call($name, $arguments);
     }
 }

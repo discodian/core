@@ -14,7 +14,10 @@
 
 namespace Discodian\Core\Socket;
 
-class Event
+use GuzzleHttp\ClientInterface;
+use React\Promise\Deferred;
+
+abstract class Event
 {
     // General
     const READY                = 'READY';
@@ -51,4 +54,16 @@ class Event
     const MESSAGE_DELETE      = 'MESSAGE_DELETE';
     const MESSAGE_UPDATE      = 'MESSAGE_UPDATE';
     const MESSAGE_DELETE_BULK = 'MESSAGE_DELETE_BULK';
+
+    /**
+     * @var ClientInterface
+     */
+    protected $http;
+
+    public function __construct(ClientInterface $http)
+    {
+        $this->http = $http;
+    }
+
+    abstract public function __invoke(Deferred $deferred, array $data);
 }

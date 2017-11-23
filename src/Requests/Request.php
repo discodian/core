@@ -12,7 +12,7 @@
  * @see https://github.com/discodian
  */
 
-namespace Discodian\Core\Socket\Requests;
+namespace Discodian\Core\Requests;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Promise;

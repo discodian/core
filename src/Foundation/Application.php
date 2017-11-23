@@ -118,9 +118,18 @@ class Application extends Container implements Contract
         return static::VERSION;
     }
 
+    /**
+     * @see https://discordapp.com/developers/docs/reference#user-agent
+     * @return string
+     */
     public function userAgent(): string
     {
-        return 'Discodian/' . $this->version();
+        return sprintf(
+            "%s (%s, %s)",
+            'Discodian',
+            'http://discodian.com',
+            $this->version()
+        );
     }
 
     /**
@@ -193,12 +202,12 @@ class Application extends Container implements Contract
     public function registerConfiguredProviders()
     {
         foreach ([
+                     EventProvider::class,
+                     DatabaseProvider::class,
+                     CacheProvider::class,
                      LogProvider::class,
                      HttpProvider::class,
-                     EventProvider::class,
                      SocketProvider::class,
-                     CacheProvider::class,
-                     DatabaseProvider::class,
                  ] as $provider) {
             $this->register($provider);
         }

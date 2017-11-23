@@ -12,20 +12,9 @@
  * @see https://github.com/discodian
  */
 
-namespace Discodian\Core\Resources\Guild;
+namespace Discodian\Core\Requests;
 
-use Discodian\Core\Resources\Part;
-
-/**
- * @property int $id
- * @property int $color
- * @property bool $hoist
- * @property bool $managed
- * @property string $name
- * @property bool $mentionable
- * @property int $permissions
- * @property int $position
- */
-class Role extends Part
+class GatewayRequest extends Request
 {
+    protected $path = 'gateway/bot';
 }

@@ -16,9 +16,8 @@ namespace Discodian\Core\Socket;
 
 use Discodian\Core\Events;
 use Discodian\Core\Exceptions\MisconfigurationException;
-use Discodian\Core\Socket\Requests\GatewayRequest;
+use Discodian\Core\Requests\GatewayRequest;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
@@ -27,7 +26,6 @@ use Ratchet\Client\Connector as WebsocketConnector;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\Message;
 use React\EventLoop\LoopInterface;
-use function React\Promise\resolve;
 use RuntimeException;
 
 class Connector
