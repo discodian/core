@@ -17,7 +17,7 @@ namespace Discodian\Core\Requests;
 use Discodian\Core\Database\Persists;
 use Discodian\Parts\Part;
 
-class ResourceRequest extends Request
+class Resource extends Request
 {
     /**
      * The part this request is made on behalf of.
@@ -64,9 +64,9 @@ class ResourceRequest extends Request
 
     /**
      * @param string $part
-     * @return ResourceRequest
+     * @return Resource
      */
-    public function setPart(string $part): ResourceRequest
+    public function setPart(string $part): Resource
     {
         $this->part = $part;
 

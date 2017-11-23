@@ -17,8 +17,6 @@ namespace Discodian\Core\Listeners;
 use Discodian\Core\Events\Ws\Ready;
 use Discodian\Core\Socket\Events\GuildCreate;
 use Discodian\Parts\Bot;
-use Discodian\Parts\Guild\Guild;
-use Discodian\Core\Requests\ResourceRequest;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use React\Promise\Deferred;
@@ -55,8 +53,6 @@ class ReadyHandler
             $bot->discriminator,
             count($content->guilds)
         ));
-
-        logs("Bot \"{$bot->username}:{$bot->discriminator}\" is ready.");
     }
 
     protected function bot(string $sessionId, $user): Bot
