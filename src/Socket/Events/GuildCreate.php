@@ -119,7 +119,7 @@ class GuildCreate extends Event
             $deferred->resolve($guildPart);
         };
 
-        if ($this->discord->options['retrieveBans']) {
+        if (false) {
             $this->http->get("guilds/{$guildPart->id}/bans")->then(function ($rawBans) use (&$guildPart, $resolve) {
                 $bans = new BanRepository(
                     $this->http,
