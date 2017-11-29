@@ -53,8 +53,6 @@ class ReadyHandler
             $bot->discriminator,
             count($content->guilds)
         ));
-
-        logs("Bot \"{$bot->username}:{$bot->discriminator}\" is ready.");
     }
 
     protected function bot(string $sessionId, $user): Bot
