@@ -20,6 +20,7 @@ use Discodian\Core\Providers\DatabaseProvider;
 use Discodian\Core\Providers\EventProvider;
 use Discodian\Core\Providers\HttpProvider;
 use Discodian\Core\Providers\LogProvider;
+use Discodian\Core\Providers\PartProvider;
 use Discodian\Core\Providers\SocketProvider;
 use Discodian\Core\Socket\Connector;
 use Dotenv\Dotenv;
@@ -208,6 +209,7 @@ class Application extends Container implements Contract
                      LogProvider::class,
                      HttpProvider::class,
                      SocketProvider::class,
+                     PartProvider::class
                  ] as $provider) {
             $this->register($provider);
         }
