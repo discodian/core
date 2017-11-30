@@ -72,4 +72,12 @@ class Resource extends Request
 
         return $this;
     }
+
+    public function get($id)
+    {
+        $this->part->id = $id;
+        $this->path = $this->part->getEndpoint('get');
+
+        return $this->request();
+    }
 }

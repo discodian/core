@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Factory;
 
+use Discodian\Core\Requests\Resource;
 use Discodian\Core\Requests\ResourceRequest;
 use Discodian\Parts\Contracts\Registry;
 use Discodian\Parts\Part;
@@ -31,7 +32,7 @@ class Factory
         $this->registry = $registry;
     }
 
-    public function create(string $class, array $data = [])
+    public function create(string $class, array $data = [], bool $exists = false)
     {
         if (Str::startsWith($class, 'Discodian\\Parts\\')) {
             return $this->part($class, $data);
@@ -40,14 +41,18 @@ class Factory
         throw new \InvalidArgumentException("Cannot instantiate $class");
     }
 
-    public function part(string $class, array $data)
+    public function part(string $class, array $data): Part
     {
         /** @var Part $part */
         $part = new $class($data);
 
         foreach ($part->getAttributes() as $property => $value) {
-            $this->relations($part, $property, $value);
+            if ($relational = $this->relations($part, $property, $value)) {
+                $part->{$property} = $relational;
+            }
         }
+
+        return $part;
     }
 
     protected function relations(Part $part, string $property, $value)
@@ -65,11 +70,16 @@ class Factory
         ) {
             return $this->get($part, $value);
         }
+
+        return null;
     }
 
-    public function get(Part $part, $id)
+    public function get(string $part, $id)
     {
-        $request = ($request = new ResourceRequest())
-            ->setPart($part);
+        $request = (new Resource())
+            ->setPart(new $part)
+            ->get($id);
+
+        dd($request);
     }
 }

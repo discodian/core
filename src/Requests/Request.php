@@ -53,7 +53,7 @@ abstract class Request
     public function request()
     {
         return static::getHttp()
-            ->requestAsync($method ?? $this->method, $path ?? $this->path)
+            ->requestAsync($this->method, $this->path)
             ->then(function (Response $response) {
                 $this->processRateLimits(new HeaderBag($response->getHeaders()));
 

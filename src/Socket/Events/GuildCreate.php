@@ -20,7 +20,7 @@ use Discodian\Parts\Guild\Guild;
 use Discodian\Parts\Guild\Ban;
 use Discodian\Parts\Guild\Role;
 use Discodian\Parts\Guild\Member;
-use Discord\Parts\WebSockets\VoiceStateUpdate as VoiceStateUpdatePart;
+use Discodian\Parts\Socket\VoiceStateUpdate as VoiceStateUpdatePart;
 use React\Promise\Deferred;
 
 class GuildCreate extends Event

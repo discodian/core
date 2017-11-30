@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Socket;
 
+use Discodian\Core\Factory\Factory;
 use GuzzleHttp\ClientInterface;
 use React\Promise\Deferred;
 
@@ -59,10 +60,15 @@ abstract class Event
      * @var ClientInterface
      */
     protected $http;
+    /**
+     * @var Factory
+     */
+    protected $factory;
 
-    public function __construct(ClientInterface $http)
+    public function __construct(ClientInterface $http, Factory $factory)
     {
         $this->http = $http;
+        $this->factory = $factory;
     }
 
     abstract public function __invoke(Deferred $deferred, \stdClass $data);
