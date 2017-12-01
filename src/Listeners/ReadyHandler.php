@@ -83,5 +83,11 @@ class ReadyHandler
 
             $event($defer, $guild);
         }
+
+        if ($unavailable->isEmpty()) {
+            return;
+        }
+
+
     }
 }

@@ -72,6 +72,11 @@ class Connector
     protected $reconnecting = false;
 
     /**
+     * @var bool
+     */
+    protected $isReady = false;
+
+    /**
      * The package sequence.
      *
      * @var int
@@ -301,10 +306,5 @@ class Connector
         logs('Identified.', ['resume' => $payload['op'] === Op::RESUME]);
 
         return $payload['op'] === Op::RESUME;
-    }
-
-    public function __destruct()
-    {
-//        $this->wsClose(Op::CLOSE_ABNORMAL, 'Terminated.');
     }
 }
