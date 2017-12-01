@@ -87,7 +87,5 @@ class ReadyHandler
         if ($unavailable->isEmpty()) {
             return;
         }
-
-
     }
 }

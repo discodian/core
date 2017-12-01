@@ -37,7 +37,7 @@ class GuildCreate extends Event
         }
 
         $guildPart = $this->factory->create(Guild::class, $data, true);
-dd($guildPart);
+        dd($guildPart);
         /*        $roles = new RoleRepository(
                     $this->http,
                     $this->cache,
