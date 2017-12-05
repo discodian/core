@@ -20,6 +20,8 @@ use Illuminate\Support\Str;
 
 class Resource extends Model
 {
+    protected $fillable = ['*'];
+
     /**
      * @var Part
      */
@@ -28,9 +30,10 @@ class Resource extends Model
     public function getTable(): string
     {
         $class = get_class($this->part);
-        $basename = basename($class);
+        $class = Str::lower(Str::plural($class));
+        $table = last(explode('\\', $class));
 
-        return Str::lower(Str::plural($basename));
+        return $table;
     }
 
     /**

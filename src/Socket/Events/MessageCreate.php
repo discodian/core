@@ -15,8 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\Channel\Message;
-use Discord\Repository\Channel\MessageRepository;
+use Discodian\Parts\Channel\Message;
 use React\Promise\Deferred;
 
 class MessageCreate extends Event
@@ -26,17 +25,7 @@ class MessageCreate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $messagePart = $this->factory->create(Message::class, $data, true);
-
-        if ($this->discord->options['storeMessages']) {
-            $messages = $this->discord->getRepository(
-                MessageRepository::class,
-                $messagePart->channel_id,
-                'messages',
-                ['channel_id' => $messagePart->channel_id]
-            );
-            $messages->push($messagePart);
-        }
+        $messagePart = $this->factory->create(Message::class, $data);
 
         $deferred->resolve($messagePart);
     }

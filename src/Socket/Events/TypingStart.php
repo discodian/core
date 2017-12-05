@@ -15,7 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\WebSockets\TypingStart as TypingStartPart;
+use Discodian\Parts\Socket\TypingStart as TypingStartPart;
 use React\Promise\Deferred;
 
 class TypingStart extends Event
@@ -25,7 +25,7 @@ class TypingStart extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $typing = $this->factory->create(TypingStartPart::class, $data, true);
+        $typing = $this->factory->create(TypingStartPart::class, $data);
 
         $deferred->resolve($typing);
     }

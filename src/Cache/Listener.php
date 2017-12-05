@@ -14,22 +14,50 @@
 
 namespace Discodian\Core\Cache;
 
+use Discodian\Core\Events\Parts\Cached;
+use Discodian\Core\Events\Parts\Deleted;
 use Discodian\Core\Events\Parts\Loaded;
+use Discodian\Parts\Part;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class Listener
 {
+    /**
+     * @var Repository
+     */
+    private $cache;
+    /**
+     * @var Dispatcher
+     */
+    private $events;
+
+    public function __construct(Repository $cache, Dispatcher $events)
+    {
+        $this->cache = $cache;
+        $this->events = $events;
+    }
+
     public function subscribe(Dispatcher $events)
     {
-        if (config('cache.default')) {
-            $events->listen(Loaded::class, [$this, 'cache']);
-        }
+        $events->listen(Loaded::class, [$this, 'cache']);
+        $events->listen(Deleted::class, [$this, 'forget']);
+    }
+
+    protected function key(Part $part): string
+    {
+        return sprintf('parts.%s.%d', get_class($part), $part->id);
     }
 
     public function cache(Loaded $event)
     {
-        $key = sprintf('parts.%s.%d', get_class($event->part), $event->part->id);
+        $this->cache->forever($this->key($event->part), $event->part);
 
-        cache([$key => $event->part]);
+        $this->events->dispatch(new Cached($event->part));
+    }
+
+    public function forget(Deleted $event)
+    {
+        $this->cache->forget($this->key($event->part));
     }
 }

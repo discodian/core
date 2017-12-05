@@ -14,20 +14,44 @@
 
 namespace Discodian\Core\Database;
 
+use Discodian\Core\Events\Parts\Deleted;
 use Discodian\Core\Events\Parts\Loaded;
+use Discodian\Core\Events\Parts\Persisted;
+use Discodian\Parts\Part;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class Listener
 {
+    /**
+     * @var Dispatcher
+     */
+    private $events;
+
+    public function __construct(Dispatcher $events)
+    {
+        $this->events = $events;
+    }
+
     public function subscribe(Dispatcher $events)
     {
-        if (config('database.default')) {
-            $events->listen(Loaded::class, [$this, 'persist']);
-        }
+        $events->listen(Loaded::class, [$this, 'persist']);
+        $events->listen(Deleted::class, [$this, 'delete']);
     }
 
     public function persist(Loaded $event)
     {
-        Resource::forPart($event->part)->save();
+        $this->model($event->part)->save();
+
+        $this->events->dispatch(new Persisted($event->part));
+    }
+
+    public function delete(Deleted $event)
+    {
+        $this->model($event->part)->delete();
+    }
+
+    protected function model(Part $part): Resource
+    {
+        return Resource::forPart($part);
     }
 }

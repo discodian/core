@@ -226,7 +226,12 @@ class Application extends Container implements Contract
     public function register($provider, $options = [], $force = false)
     {
         $provider = new $provider($this);
-        $this->call([$provider, 'register']);
+        if (method_exists($provider, 'register')) {
+            $this->call([$provider, 'register']);
+        }
+        if (method_exists($provider, 'boot')) {
+            $this->call([$provider, 'boot']);
+        }
     }
 
     /**

@@ -15,10 +15,13 @@
 namespace Discodian\Core\Factory;
 
 use Carbon\Carbon;
+use Discodian\Core\Events\Parts\Deleted;
+use Discodian\Core\Events\Parts\Loaded;
 use Discodian\Core\Requests\Resource;
 use Discodian\Core\Requests\ResourceRequest;
 use Discodian\Parts\Contracts\Registry;
 use Discodian\Parts\Part;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -28,14 +31,23 @@ class Factory
      * @var Registry
      */
     private $registry;
+    /**
+     * @var Dispatcher
+     */
+    private $events;
 
-    public function __construct(Registry $registry)
+    public function __construct(Registry $registry, Dispatcher $events)
     {
         $this->registry = $registry;
+        $this->events = $events;
     }
 
-    public function create(string $class, array $data = [])
+    public function create(string $class, $data)
     {
+        if (is_object($data) && isset($data->d)) {
+            $data = (array) $data->d;
+        }
+
         if (Str::startsWith($class, 'Discodian\\Parts\\')) {
             return $this->part($class, $data);
         }
@@ -56,9 +68,14 @@ class Factory
             }
         }
 
-        $part->save();
+        $this->events->dispatch(new Loaded($part));
 
         return $part;
+    }
+
+    public function delete(Part $part)
+    {
+        $this->events->dispatch(new Deleted($part));
     }
 
     /**
