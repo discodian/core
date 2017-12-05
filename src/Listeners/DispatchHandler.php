@@ -18,6 +18,7 @@ use Discodian\Core\Events\Ws\Dispatch;
 use Discodian\Core\Events\Ws\Ready;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Str;
+use React\Promise\Deferred;
 
 class DispatchHandler
 {
@@ -38,14 +39,27 @@ class DispatchHandler
 
     public function dispatch(Dispatch $event)
     {
-        $readableEvent = Str::studly($event->data->t);
+        $readableEvent = Str::camel(Str::lower($event->data->t));
+        $eventClass = "Discodian\\Core\\Socket\\Events\\" . Str::studly(Str::lower($event->data->t));
 
         if (method_exists($this, $readableEvent)) {
-            logs("Dispatching event {$readableEvent}");
+            logs("Dispatching event to local override {$readableEvent}");
             $this->{$readableEvent}($event);
+        } elseif (class_exists($eventClass)) {
+            logs("Dispatching event to event class {$eventClass}");
+            $this->dispatchEvent($eventClass, $event->data);
         } else {
-            logs("No dispatch found for $readableEvent");
+            logs("No dispatch found for {$event->data->t}: $eventClass or $readableEvent");
         }
+    }
+
+    public function dispatchEvent(string $event, $data)
+    {
+        $defer = new Deferred();
+
+        $event = app($event);
+
+        $event($defer, $data);
     }
 
     public function ready(Dispatch $event)

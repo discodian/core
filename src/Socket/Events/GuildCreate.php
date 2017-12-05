@@ -32,12 +32,12 @@ class GuildCreate extends Event
     {
         if (isset($data->unavailable) && $data->unavailable) {
             $deferred->reject(['unavailable', $data->id]);
-
             return $deferred->promise();
         }
 
-        $guildPart = $this->factory->create(Guild::class, $data, true);
-        dd($guildPart);
+        $guildPart = $this->factory->create(Guild::class, (array) $data, true);
+
+        $deferred->resolve($guildPart);
         /*        $roles = new RoleRepository(
                     $this->http,
                     $this->cache,
