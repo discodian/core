@@ -18,6 +18,7 @@ use Discodian\Core\Requests\Resource;
 use Discodian\Core\Requests\ResourceRequest;
 use Discodian\Parts\Contracts\Registry;
 use Discodian\Parts\Part;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class Factory
@@ -47,27 +48,35 @@ class Factory
         $part = new $class($data);
 
         foreach ($part->getAttributes() as $property => $value) {
-            if ($relational = $this->relations($part, $property, $value)) {
+            if ($relational = $this->relations($property, $value)) {
                 $part->{$property} = $relational;
             }
         }
 
+        $part->save();
+
         return $part;
     }
 
-    protected function relations(Part $part, string $property, $value)
+    /**
+     * @param string $property
+     * @param $value
+     * @return Collection|Part|null
+     */
+    protected function relations(string $property, $value)
     {
         if (preg_match('/(?<part>)_id$/', $property, $m) &&
-            $part = $this->registry->get($m['part'])) {
+            $class = $this->registry->get($m['part'])) {
 
-            return $this->part($part, (array) $value);
+            return $this->part($class, (array) $value);
         }
 
-        if ($part = $this->registry->get(Str::singular($property))) {
-            $set = [];
+        if ($class = $this->registry->get(Str::singular($property))) {
+            $set = new Collection();
 
             foreach ($value as $multi) {
-                $set[] = $this->part($part, (array) $multi);
+                $part = $this->part($class, (array) $multi);
+                $set->push($part);
             }
 
             return $set;
@@ -76,8 +85,12 @@ class Factory
         return null;
     }
 
-    private function get(string $part, $id)
+    public function get(string $class, $id)
     {
+        if ($part = cache("parts.{$class}.{$id}")) {
+            return $part;
+        }
+
         $request = (new Resource())
             ->setPart(new $part)
             ->get($id);
