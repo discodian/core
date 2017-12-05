@@ -14,6 +14,8 @@
 
 namespace Discodian\Core\Requests;
 
+use GuzzleHttp\Promise\Promise;
+
 class Resource extends Request
 {
     /**
@@ -34,7 +36,7 @@ class Resource extends Request
         return $this;
     }
 
-    public function get($id)
+    public function get($id): Promise
     {
         $this->part->id = $id;
         $this->path = $this->part->getEndpoint('get');

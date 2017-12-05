@@ -15,7 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\WebSockets\PresenceUpdate as PresenceUpdatePart;
+use Discodian\Parts\Socket\PresenceUpdate as PresenceUpdatePart;
 use React\Promise\Deferred;
 
 class PresenceUpdate extends Event
@@ -25,7 +25,7 @@ class PresenceUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $presenceUpdate = $this->factory->create(PresenceUpdatePart::class, $data, true);
+        $presenceUpdate = $this->factory->create(PresenceUpdatePart::class, $data);
         $old            = null;
 
         $guild  = $this->discord->guilds->get('id', $presenceUpdate->guild_id);
