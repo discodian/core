@@ -42,7 +42,7 @@ class Resource extends Model
      */
     public static function forPart(Part $part): Resource
     {
-        $resource = new static($part->toArray());
+        $resource = static::newQuery()->findOrNew($part->id, $part->toArray());
 
         return $resource->setPart($part);
     }
