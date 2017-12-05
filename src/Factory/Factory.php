@@ -89,8 +89,7 @@ class Factory
         if ($class = $this->registry->get(Str::singular($property))) {
             if (is_object($value)) {
                 $part->{$property} = $this->part($class, (array) $value);
-            }
-            elseif (is_array($value)) {
+            } elseif (is_array($value)) {
                 $set = new Collection();
                 foreach ($value as $multi) {
                     $set->push($this->part($class, (array)$multi));
