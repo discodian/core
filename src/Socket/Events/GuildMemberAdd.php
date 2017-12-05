@@ -28,7 +28,7 @@ class GuildMemberAdd extends Event
         $memberPart = $this->factory->create(Member::class, $data);
 
         $guild = $this->discord->guilds->get('id', $memberPart->guild_id);
-// @todo
+        // @todo
         if (! is_null($guild)) {
             $guild->members->push($memberPart);
             ++$guild->member_count;
