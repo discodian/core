@@ -21,6 +21,7 @@ use Discodian\Core\Requests\Resource;
 use Discodian\Core\Requests\ResourceRequest;
 use Discodian\Parts\Contracts\Registry;
 use Discodian\Parts\Part;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -35,11 +36,16 @@ class Factory
      * @var Dispatcher
      */
     private $events;
+    /**
+     * @var Repository
+     */
+    private $cache;
 
-    public function __construct(Registry $registry, Dispatcher $events)
+    public function __construct(Registry $registry, Dispatcher $events, Repository $cache)
     {
         $this->registry = $registry;
         $this->events = $events;
+        $this->cache = $cache;
     }
 
     public function create(string $class, $data)
@@ -98,7 +104,11 @@ class Factory
             }
         } elseif (preg_match('/(?<part>)(_id)?$/', $property, $m) &&
             $class = $this->registry->get($m['part'])) {
-            $part->{$m['part']} = $this->part($class, (array)$value);
+            if (is_array($value) || is_object($value)) {
+                $part->{$m['part']} = $this->part($class, (array)$value);
+            } else {
+                $part->{$m['part']} = $this->get($class, $value);
+            }
         } else {
             return false;
         }
@@ -108,7 +118,7 @@ class Factory
 
     public function get(string $class, $id)
     {
-        if ($part = cache("parts.{$class}.{$id}")) {
+        if ($part = $this->cache->get("parts.{$class}.{$id}")) {
             return $part;
         }
 

@@ -15,9 +15,8 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\Guild\Guild;
-use Discord\Parts\Guild\Role;
-use Discord\Repository\Guild\RoleRepository;
+use Discodian\Parts\Guild\Guild;
+use Discodian\Parts\Guild\Role;
 use React\Promise\Deferred;
 
 class GuildUpdate extends Event

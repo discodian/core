@@ -24,14 +24,7 @@ class GuildBanAdd extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $guild = $this->discord->guilds->get('id', $data->guild_id);
-        $ban   = $this->factory->create(Ban::class, [
-            'guild' => $guild,
-            'user'  => $data->user,
-        ], true);
-
-        $guild = $this->discord->guilds->get('id', $ban->guild->id);
-        $guild->bans->push($ban);
+        $ban = $this->factory->create(Ban::class, $data);
 
         $deferred->resolve($ban);
     }

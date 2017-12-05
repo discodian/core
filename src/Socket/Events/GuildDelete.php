@@ -25,9 +25,8 @@ class GuildDelete extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $guildPart = $this->factory->create(Guild::class, $data, true);
-
-        $this->discord->guilds->pull($guildPart->id);
+        $guildPart = $this->factory->create(Guild::class, $data);
+        $this->factory->delete($guildPart);
 
         $deferred->resolve($guildPart);
     }

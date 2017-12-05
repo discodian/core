@@ -25,17 +25,8 @@ class ChannelUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $channel = $this->factory->create(Channel::class, $data, true);
+        $channel = $this->factory->create(Channel::class, $data);
 
-        if ($channel->is_private) {
-            $old = $this->discord->private_channels->get('id', $channel->id);
-            $this->discord->private_channels->push($channel);
-        } else {
-            $guild = $this->discord->guilds->get('id', $channel->guild_id);
-            $old   = $guild->channels->get('id', $channel->id);
-            $guild->channels->push($channel);
-        }
-
-        $deferred->resolve([$channel, $old]);
+        $deferred->resolve($channel);
     }
 }
