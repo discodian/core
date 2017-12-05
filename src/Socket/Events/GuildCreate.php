@@ -35,7 +35,9 @@ class GuildCreate extends Event
             return $deferred->promise();
         }
 
-        $guildPart = $this->factory->create(Guild::class, (array) $data, true);
+        $guildPart = $this->factory->create(Guild::class, (array) $data->d, true);
+
+        logs('guild', $guildPart->toArray());
 
         $deferred->resolve($guildPart);
         /*        $roles = new RoleRepository(

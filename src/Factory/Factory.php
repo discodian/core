@@ -57,24 +57,26 @@ class Factory
 
     protected function relations(Part $part, string $property, $value)
     {
-        if (\is_array($value)) {
-            $set = [];
-            foreach ($value as $multi) {
-                $set[] = $this->relations($part, $property, $multi);
-            }
-            return $set;
+        if (preg_match('/(?<part>)_id$/', $property, $m) &&
+            $part = $this->registry->get($m['part'])) {
+
+            return $this->part($part, (array) $value);
         }
 
-        if (preg_match('/(?<part>)_id$/', $property, $m) &&
-            $part = $this->registry->get($m['part'])
-        ) {
-            return $this->get($part, $value);
+        if ($part = $this->registry->get(Str::singular($property))) {
+            $set = [];
+
+            foreach ($value as $multi) {
+                $set[] = $this->part($part, (array) $multi);
+            }
+
+            return $set;
         }
 
         return null;
     }
 
-    public function get(string $part, $id)
+    private function get(string $part, $id)
     {
         $request = (new Resource())
             ->setPart(new $part)
