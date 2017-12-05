@@ -67,7 +67,6 @@ class Factory
     {
         if (preg_match('/(?<part>)_id$/', $property, $m) &&
             $class = $this->registry->get($m['part'])) {
-
             return $this->part($class, (array) $value);
         }
 

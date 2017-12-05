@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Providers;
 
+use Discodian\Core\Cache\Listener;
 use Illuminate\Cache\CacheServiceProvider;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,5 +23,7 @@ class CacheProvider extends ServiceProvider
     public function register()
     {
         $this->app->register(CacheServiceProvider::class);
+
+        $this->app->make('events')->subscribe(Listener::class);
     }
 }

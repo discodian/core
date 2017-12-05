@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Providers;
 
+use Discodian\Core\Database\Listener;
 use Illuminate\Database\DatabaseServiceProvider;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\MigrationServiceProvider;
@@ -28,6 +29,8 @@ class DatabaseProvider extends ServiceProvider
             $this->app->register(MigrationServiceProvider::class);
 
             $this->update();
+
+            $this->app->make('events')->subscribe(Listener::class);
         }
     }
 
