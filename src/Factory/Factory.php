@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Factory;
 
+use Carbon\Carbon;
 use Discodian\Core\Requests\Resource;
 use Discodian\Core\Requests\ResourceRequest;
 use Discodian\Parts\Contracts\Registry;
@@ -33,7 +34,7 @@ class Factory
         $this->registry = $registry;
     }
 
-    public function create(string $class, array $data = [], bool $exists = false)
+    public function create(string $class, array $data = [])
     {
         if (Str::startsWith($class, 'Discodian\\Parts\\')) {
             return $this->part($class, $data);
@@ -45,11 +46,13 @@ class Factory
     public function part(string $class, array $data): Part
     {
         /** @var Part $part */
-        $part = new $class($data);
+        $part = new $class();
 
-        foreach ($part->getAttributes() as $property => $value) {
-            if ($relational = $this->relations($property, $value)) {
-                $part->{$property} = $relational;
+        foreach ($data as $property => $value) {
+            if (!$this->carbon($part, $property, $value)
+                && !$this->relations($part, $property, $value)
+            ) {
+                $part->{$property} = $value;
             }
         }
 
@@ -59,29 +62,32 @@ class Factory
     }
 
     /**
+     * @param Part $part
      * @param string $property
      * @param $value
-     * @return Collection|Part|null
+     * @return bool
      */
-    protected function relations(string $property, $value)
+    protected function relations(Part $part, string $property, $value): bool
     {
-        if (preg_match('/(?<part>)_id$/', $property, $m) &&
-            $class = $this->registry->get($m['part'])) {
-            return $this->part($class, (array) $value);
-        }
-
         if ($class = $this->registry->get(Str::singular($property))) {
-            $set = new Collection();
-
-            foreach ($value as $multi) {
-                $part = $this->part($class, (array) $multi);
-                $set->push($part);
+            if (is_object($value)) {
+                $part->{$property} = $this->part($class, (array) $value);
             }
-
-            return $set;
+            elseif (is_array($value)) {
+                $set = new Collection();
+                foreach ($value as $multi) {
+                    $set->push($this->part($class, (array)$multi));
+                }
+                $part->{$property} = $set;
+            }
+        } elseif (preg_match('/(?<part>)(_id)?$/', $property, $m) &&
+            $class = $this->registry->get($m['part'])) {
+            $part->{$m['part']} = $this->part($class, (array)$value);
+        } else {
+            return false;
         }
 
-        return null;
+        return true;
     }
 
     public function get(string $class, $id)
@@ -95,5 +101,16 @@ class Factory
             ->get($id);
 
         dd($request);
+    }
+
+    protected function carbon(Part $part, $property, $value): bool
+    {
+        if (is_string($value) && preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $value)) {
+            $part->{$property} = new Carbon($value);
+
+            return true;
+        }
+
+        return false;
     }
 }
