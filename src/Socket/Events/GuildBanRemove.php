@@ -24,7 +24,7 @@ class GuildBanRemove extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $ban   = $this->factory->create(Ban::class, $data);
+        $ban = $this->factory->create(Ban::class, $data);
         $this->factory->delete($ban);
 
         $deferred->resolve($ban);
