@@ -15,7 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Repository\Channel\MessageRepository;
+use Discodian\Parts\Channel\Message;
 use React\Promise\Deferred;
 
 class MessageDelete extends Event
@@ -25,13 +25,7 @@ class MessageDelete extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $messages = $this->discord->getRepository(
-            MessageRepository::class,
-            $data->channel_id,
-            'messages',
-            ['channel_id' => $data->channel_id]
-        );
-        $messages->pull($data->id);
+        $this->factory->deleteIds(Message::class, [$data->id]);
 
         $deferred->resolve();
     }

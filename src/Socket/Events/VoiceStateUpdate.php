@@ -15,7 +15,9 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\WebSockets\VoiceStateUpdate as VoiceStateUpdatePart;
+use Discodian\Parts\Guild\Guild;
+use Discodian\Parts\Socket\VoiceStateUpdate as VoiceStateUpdatePart;
+use Discodian\Parts\User\User;
 use React\Promise\Deferred;
 
 class VoiceStateUpdate extends Event
@@ -25,9 +27,11 @@ class VoiceStateUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $state = $this->factory->create(VoiceStateUpdatePart::class, $data, true);
+        $state = $this->factory->create(VoiceStateUpdatePart::class, $data);
 
-        foreach ($this->discord->guilds as $index => $guild) {
+        $guilds = $this->factory->all(Guild::class);
+
+        $guilds->each(function (Guild $guild) use ($state) {
             if ($guild->id == $state->guild_id) {
                 foreach ($guild->channels as $cindex => $channel) {
                     $channel->members->pull($state->id);
@@ -37,7 +41,7 @@ class VoiceStateUpdate extends Event
                     }
                 }
             } else {
-                $user = $this->discord->users->get('id', $state->id);
+                $user = $this->factory->get(User::class, $state->id);
 
                 foreach ($guild->channels as $cindex => $channel) {
                     if (! (isset($user) && $user->bot)) {
@@ -45,7 +49,8 @@ class VoiceStateUpdate extends Event
                     }
                 }
             }
-        }
+            $this->factory->set($guild);
+        });
 
         $deferred->resolve($state);
     }

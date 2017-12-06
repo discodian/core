@@ -15,7 +15,9 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\User\Member;
+use Discodian\Parts\Guild\Guild;
+use Discodian\Parts\Guild\Member;
+use Discodian\Parts\Part;
 use React\Promise\Deferred;
 
 class GuildMemberUpdate extends Event
@@ -25,19 +27,20 @@ class GuildMemberUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $memberPart = $this->factory->create(Member::class, $data, true);
-        $old        = null;
+        $memberPart = $this->factory->create(Member::class, $data);
+        $old = null;
 
-        $guild = $this->discord->guilds->get('id', $memberPart->guild_id);
+        $guild = $this->factory->get(Guild::class, $memberPart->guild_id);
 
-        if (! is_null($guild)) {
-            $old        = $guild->members->get('id', $memberPart->id);
-            $raw        = (is_null($old)) ? [] : $old->getRawAttributes();
-            $memberPart = $this->factory->create(Member::class, array_merge($raw, (array) $data), true);
+        if (!is_null($guild)) {
+            /** @var Part $old */
+            $old = $guild->members->get('id', $memberPart->id);
+            $raw = (is_null($old)) ? [] : $old->getAttributes();
+            $memberPart = $this->factory->create(Member::class, array_merge($raw, (array)$data));
 
             $guild->members->push($memberPart);
 
-            $this->discord->guilds->push($guild);
+            $this->factory->set($guild);
         }
 
         $deferred->resolve([$memberPart, $old]);

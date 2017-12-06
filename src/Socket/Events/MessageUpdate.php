@@ -15,8 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\Channel\Message;
-use Discord\Repository\Channel\MessageRepository;
+use Discodian\Parts\Channel\Message;
 use React\Promise\Deferred;
 
 class MessageUpdate extends Event
@@ -26,25 +25,19 @@ class MessageUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $messagePart = $this->factory->create(Message::class, $data, true);
+        $message = $this->factory->get(Message::class, $data->d->id);
 
-        $messages = $this->discord->getRepository(
-            MessageRepository::class,
-            $messagePart->channel_id,
-            'messages',
-            ['channel_id' => $messagePart->channel_id]
-        );
-        $message = $messages->get('id', $messagePart->id);
+        $messagePart = $this->factory->create(Message::class, $data);
+
 
         if (is_null($message)) {
             $newMessage = $messagePart;
         } else {
-            $newMessage = $this->factory->create(Message::class, array_merge($message->getRawAttributes(), $messagePart->getRawAttributes()), true);
+            $newMessage = $this->factory->create(Message::class, array_merge($message->getAttributes(), $messagePart->getAttributes()));
         }
 
-        $old = $messages->get('id', $messagePart->id);
-        $messages->push($newMessage);
+        $this->factory->set($newMessage);
 
-        $deferred->resolve([$messagePart, $old]);
+        $deferred->resolve([$messagePart, $message]);
     }
 }

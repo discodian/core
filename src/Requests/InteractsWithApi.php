@@ -16,7 +16,6 @@ namespace Discodian\Core\Requests;
 
 use Discodian\Core\Exceptions\InvalidEndpointException;
 use Illuminate\Support\Arr;
-use function React\Promise\reject;
 
 trait InteractsWithApi
 {
@@ -32,7 +31,7 @@ trait InteractsWithApi
         $route = Arr::get($this->endpoints, $endpoint);
 
         if (! $route) {
-            reject(new InvalidEndpointException($endpoint));
+            throw new InvalidEndpointException(sprintf('%s::%s', get_class($this), $endpoint));
         }
 
         // We need to replace some variables, eg :id

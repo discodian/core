@@ -15,6 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
+use Discodian\Parts\Guild\Role;
 use React\Promise\Deferred;
 
 class GuildRoleDelete extends Event
@@ -24,9 +25,16 @@ class GuildRoleDelete extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $guild = $this->discord->guilds->get('id', $data->guild_id);
-        $guild->roles->pull($data->role_id);
+        $rolePart = $this->factory->get(Role::class, $data);
+        $guild = $this->factory->get(Guild::class, $rolePart->guild_id);
 
-        $deferred->resolve($data);
+        if ($guild) {
+            $guild->roles->pull($data->role_id);
+            $this->factory->set($guild);
+        }
+
+        $this->factory->delete($rolePart);
+
+        $deferred->resolve([$rolePart, $guild]);
     }
 }

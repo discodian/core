@@ -16,7 +16,6 @@ namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
 use Discodian\Parts\Guild\Guild;
-use Discodian\Parts\Guild\Role;
 use React\Promise\Deferred;
 
 class GuildUpdate extends Event
@@ -32,30 +31,9 @@ class GuildUpdate extends Event
             return;
         }
 
-        $guildPart = $this->factory->create(Guild::class, $data, true);
+        $old = $this->discord->guilds->get('id', $data->id);
 
-        $roles = new RoleRepository(
-            $this->http,
-            $this->cache,
-            $this->factory
-        );
-
-        foreach ($data->roles as $role) {
-            $role             = (array) $role;
-            $role['guild_id'] = $guildPart->id;
-            $rolePart         = $this->factory->create(Role::class, $role, true);
-
-            $roles->push($rolePart);
-        }
-
-        $guildPart->roles = $roles;
-
-        if ($guildPart->large) {
-            $this->discord->addLargeGuild($guildPart);
-        }
-
-        $old = $this->discord->guilds->get('id', $guildPart->id);
-        $this->discord->guilds->push($guildPart);
+        $guildPart = $this->factory->create(Guild::class, $data);
 
         $deferred->resolve([$guildPart, $old]);
     }

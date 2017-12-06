@@ -15,7 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\WebSockets\VoiceServerUpdate as VoiceServerUpdatePart;
+use Discodian\Parts\Socket\VoiceServerUpdate as VoiceServerUpdatePart;
 use React\Promise\Deferred;
 
 class VoiceServerUpdate extends Event
@@ -25,7 +25,7 @@ class VoiceServerUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $part = $this->factory->create(VoiceServerUpdatePart::class, $data, true);
+        $part = $this->factory->create(VoiceServerUpdatePart::class, $data);
 
         $deferred->resolve($part);
     }

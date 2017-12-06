@@ -15,6 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
+use Discodian\Parts\Guild\Guild;
 use Discord\Parts\User\Member;
 use React\Promise\Deferred;
 
@@ -27,13 +28,13 @@ class GuildMemberRemove extends Event
     {
         $memberPart = $this->factory->create(Member::class, $data, true);
 
-        $guild = $this->discord->guilds->get('id', $memberPart->guild_id);
+        $guild = $this->factory->get(Guild::class, $memberPart->guild_id);
 
         if (! is_null($guild)) {
             $guild->members->pull($memberPart->id);
             --$guild->member_count;
 
-            $this->discord->guilds->push($guild);
+            $this->factory->set($guild);
         }
 
         $deferred->resolve($memberPart);

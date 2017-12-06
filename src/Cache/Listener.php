@@ -17,7 +17,7 @@ namespace Discodian\Core\Cache;
 use Discodian\Core\Events\Parts\Cached;
 use Discodian\Core\Events\Parts\Delete;
 use Discodian\Core\Events\Parts\Get;
-use Discodian\Core\Events\Parts\Loaded;
+use Discodian\Core\Events\Parts\Set;
 use Discodian\Parts\Part;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -42,7 +42,7 @@ class Listener
     public function subscribe(Dispatcher $events)
     {
         $events->listen(Get::class, [$this, 'get']);
-        $events->listen(Loaded::class, [$this, 'cache']);
+        $events->listen(Set::class, [$this, 'cache']);
         $events->listen(Delete::class, [$this, 'forget']);
     }
 
@@ -57,7 +57,7 @@ class Listener
         logs("Cache miss for $key.");
     }
 
-    public function cache(Loaded $event)
+    public function cache(Set $event)
     {
         $key = $this->keyFromPart($event->part);
 

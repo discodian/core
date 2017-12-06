@@ -15,7 +15,7 @@
 namespace Discodian\Core\Database;
 
 use Discodian\Core\Events\Parts\Delete;
-use Discodian\Core\Events\Parts\Loaded;
+use Discodian\Core\Events\Parts\Set;
 use Discodian\Core\Events\Parts\Persisted;
 use Discodian\Parts\Part;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -34,11 +34,11 @@ class Listener
 
     public function subscribe(Dispatcher $events)
     {
-        $events->listen(Loaded::class, [$this, 'persist']);
+        $events->listen(Set::class, [$this, 'persist']);
         $events->listen(Delete::class, [$this, 'delete']);
     }
 
-    public function persist(Loaded $event)
+    public function persist(Set $event)
     {
         $this->model($event->part)->save();
 

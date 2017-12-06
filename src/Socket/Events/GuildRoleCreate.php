@@ -15,6 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
+use Discodian\Parts\Guild\Guild;
 use Discodian\Parts\Guild\Role;
 use React\Promise\Deferred;
 
@@ -30,9 +31,11 @@ class GuildRoleCreate extends Event
 
         $rolePart = $this->factory->create(Role::class, $adata);
 
-        $guild = $this->discord->guilds->get('id', $rolePart->guild_id);
+        $guild = $this->factory->get(Guild::class, $rolePart->guild_id);
+
         if (! is_null($guild)) {
             $guild->roles->push($rolePart);
+            $this->factory->set($guild);
         }
 
         $deferred->resolve($rolePart);

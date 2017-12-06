@@ -15,7 +15,10 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
-use Discord\Parts\WebSockets\PresenceUpdate as PresenceUpdatePart;
+use Discodian\Parts\Guild\Guild;
+use Discodian\Parts\Guild\Member;
+use Discodian\Parts\Socket\PresenceUpdate as PresenceUpdatePart;
+use Discodian\Parts\User\User;
 use React\Promise\Deferred;
 
 class PresenceUpdate extends Event
@@ -25,11 +28,11 @@ class PresenceUpdate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $presenceUpdate = $this->factory->create(PresenceUpdatePart::class, $data, true);
+        $presenceUpdate = $this->factory->create(PresenceUpdatePart::class, $data);
         $old            = null;
 
-        $guild  = $this->discord->guilds->get('id', $presenceUpdate->guild_id);
-        $member = $guild->members->get('id', $presenceUpdate->user->id);
+        $guild = $this->factory->get(Guild::class, $presenceUpdate->guild_id);
+        $member = $this->factory->get(Member::class, $presenceUpdate->user->id);
 
         if (! is_null($member)) {
             $rawOld = array_merge([
@@ -37,10 +40,10 @@ class PresenceUpdate extends Event
                 'status' => null,
                 'game'   => null,
                 'nick'   => null,
-            ], $member->getRawAttributes());
+            ], $member->getAttributes());
 
             $old = $this->factory->create(PresenceUpdatePart::class, [
-                'user'     => $this->discord->users->get('id', $presenceUpdate->user->id),
+                'user'     => $this->factory->get(User::class, $presenceUpdate->user->id),
                 'roles'    => $rawOld['roles'],
                 'guild_id' => $presenceUpdate->guild_id,
                 'status'   => $rawOld['status'],
@@ -57,6 +60,8 @@ class PresenceUpdate extends Event
             ]);
 
             $guild->members->push($member);
+
+            $this->factory->set($guild);
         }
 
         $deferred->resolve([$presenceUpdate, $old]);

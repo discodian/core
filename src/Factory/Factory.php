@@ -23,6 +23,13 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/**
+ * @method Part|null get(string $class, string $id)
+ * @method void set(Part $part)
+ * @method void delete(Part $part)
+ * @method void deleteIds(string $class, array $ids)
+ * @method Collection all(string $class)
+ */
 class Factory
 {
     /**
@@ -71,7 +78,7 @@ class Factory
             }
         }
 
-        $this->repository->loaded($part);
+        $this->set($part);
 
         return $part;
     }
