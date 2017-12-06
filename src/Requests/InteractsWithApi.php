@@ -26,16 +26,16 @@ trait InteractsWithApi
      */
     protected $endpoints = [];
 
-    public function getEndpoint(string $endpoint) : string
+    public function getEndpoint(string $endpoint): string
     {
         $route = Arr::get($this->endpoints, $endpoint);
 
-        if (! $route) {
+        if (!$route) {
             throw new InvalidEndpointException(sprintf('%s::%s', get_class($this), $endpoint));
         }
 
         // We need to replace some variables, eg :id
-        if (preg_match_all('/:(?<attribute>[a-z_]+)/', $route, $m)) {
+        if (preg_match_all('/:(?<attributes>[a-z_]+)/', $route, $m)) {
             foreach ($m['attributes'] as $key => $attribute) {
                 $route = str_replace($m[0][$key], $this->get($attribute), $route);
             }

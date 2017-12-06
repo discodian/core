@@ -14,7 +14,7 @@
 
 namespace Discodian\Core\Socket\Events;
 
-use Discodian\Parts\Guild\Channel;
+use Discodian\Parts\Channel\Channel;
 use Discodian\Core\Socket\Event;
 use React\Promise\Deferred;
 

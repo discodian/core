@@ -32,7 +32,8 @@ class Repository
      * @var array
      */
     protected $map = [
-        Parts\Guild\Guild::class => []
+        Parts\Guild\Guild::class => [],
+        Parts\Channel\Channel::class => [],
     ];
 
     public function __construct(Dispatcher $events)

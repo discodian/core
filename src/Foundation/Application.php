@@ -23,6 +23,7 @@ use Discodian\Core\Providers\PartProvider;
 use Discodian\Core\Providers\SocketProvider;
 use Discodian\Core\Socket\Connector;
 use Discodian\Extend\Manager;
+use Discodian\Extend\Providers\ExtendProvider;
 use Dotenv\Dotenv;
 use Dotenv\Exception\InvalidPathException;
 use Illuminate\Container\Container;
@@ -210,7 +211,9 @@ class Application extends Container implements Contract
                      LogProvider::class,
                      HttpProvider::class,
                      SocketProvider::class,
-                     PartProvider::class
+                     PartProvider::class,
+
+                     ExtendProvider::class,
                  ] as $provider) {
             $this->register($provider);
         }

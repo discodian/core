@@ -14,7 +14,7 @@
 
 namespace Discodian\Core\Socket\Events;
 
-use Discodian\Parts\Guild\Channel;
+use Discodian\Parts\Channel\Channel;
 use Discodian\Core\Socket\Event;
 use React\Promise\Deferred;
 
@@ -25,7 +25,7 @@ class ChannelCreate extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $channel = $this->factory->create(Channel::class, $data, true);
+        $channel = $this->factory->create(Channel::class, $data);
 
         $deferred->resolve($channel);
     }
