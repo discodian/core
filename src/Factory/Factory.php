@@ -91,7 +91,6 @@ class Factory
      */
     protected function relations(Part $part, string $property, $value): bool
     {
-
         if ($class = $this->registry->get(Str::singular($property))) {
             if (is_object($value)) {
                 $part->{$property} = $this->part($class, (array) $value);
