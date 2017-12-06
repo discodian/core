@@ -14,6 +14,8 @@
 
 namespace Discodian\Core\Providers;
 
+use Discodian\Core\Factory\Repository;
+use Discodian\Core\Requests\Listener;
 use Illuminate\Support\ServiceProvider;
 use Discodian\Parts\Contracts\Registry as Contract;
 use Discodian\Parts\Registry;
@@ -26,5 +28,8 @@ class PartProvider extends ServiceProvider
             Contract::class,
             Registry::class
         );
+        $this->app->singleton(Repository::class);
+
+        $this->app->make('events')->subscribe(Listener::class);
     }
 }

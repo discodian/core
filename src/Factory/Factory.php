@@ -16,12 +16,9 @@ namespace Discodian\Core\Factory;
 
 use Carbon\Carbon;
 use Discodian\Core\Events\Parts\Deleted;
-use Discodian\Core\Events\Parts\Loaded;
-use Discodian\Core\Requests\Resource;
 use Discodian\Core\Requests\ResourceRequest;
 use Discodian\Parts\Contracts\Registry;
 use Discodian\Parts\Part;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -31,21 +28,21 @@ class Factory
     /**
      * @var Registry
      */
-    private $registry;
+    protected $registry;
     /**
      * @var Dispatcher
      */
-    private $events;
+    protected $events;
     /**
      * @var Repository
      */
-    private $cache;
+    private $repository;
 
-    public function __construct(Registry $registry, Dispatcher $events, Repository $cache)
+    public function __construct(Registry $registry, Dispatcher $events, Repository $repository)
     {
         $this->registry = $registry;
         $this->events = $events;
-        $this->cache = $cache;
+        $this->repository = $repository;
     }
 
     public function create(string $class, $data)
@@ -74,14 +71,9 @@ class Factory
             }
         }
 
-        $this->events->dispatch(new Loaded($part));
+        $this->repository->loaded($part);
 
         return $part;
-    }
-
-    public function delete(Part $part)
-    {
-        $this->events->dispatch(new Deleted($part));
     }
 
     /**
@@ -92,13 +84,18 @@ class Factory
      */
     protected function relations(Part $part, string $property, $value): bool
     {
+
         if ($class = $this->registry->get(Str::singular($property))) {
             if (is_object($value)) {
                 $part->{$property} = $this->part($class, (array) $value);
             } elseif (is_array($value)) {
                 $set = new Collection();
-                foreach ($value as $multi) {
-                    $set->push($this->part($class, (array)$multi));
+                foreach ($value as $item) {
+                    if (is_object($item)) {
+                        $set->push($this->part($class, (array)$item));
+                    } elseif (is_string($item)) {
+                        $set->push($this->get($class, $item));
+                    }
                 }
                 $part->{$property} = $set;
             }
@@ -116,19 +113,6 @@ class Factory
         return true;
     }
 
-    public function get(string $class, $id)
-    {
-        if ($part = $this->cache->get("parts.{$class}.{$id}")) {
-            return $part;
-        }
-
-        $request = (new Resource())
-            ->setPart(new $part)
-            ->get($id);
-
-        dd($request);
-    }
-
     protected function carbon(Part $part, $property, $value): bool
     {
         if (is_string($value) && preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $value)) {
@@ -138,5 +122,12 @@ class Factory
         }
 
         return false;
+    }
+
+    public function __call($name, $arguments)
+    {
+        if (method_exists($this->repository, $name)) {
+            return call_user_func_array([$this->repository, $name], $arguments);
+        }
     }
 }

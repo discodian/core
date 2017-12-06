@@ -26,7 +26,7 @@ class CacheProvider extends ServiceProvider
         $this->app->register(CacheServiceProvider::class);
         $this->app->alias('cache.store', Repository::class);
 
-        if (config('cache.default')) {
+        if (config('cache.default') !== 'null') {
             $this->app->make('events')->subscribe(Listener::class);
         }
     }

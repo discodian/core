@@ -15,7 +15,8 @@
 namespace Discodian\Core\Cache;
 
 use Discodian\Core\Events\Parts\Cached;
-use Discodian\Core\Events\Parts\Deleted;
+use Discodian\Core\Events\Parts\Delete;
+use Discodian\Core\Events\Parts\Get;
 use Discodian\Core\Events\Parts\Loaded;
 use Discodian\Parts\Part;
 use Illuminate\Contracts\Cache\Repository;
@@ -40,24 +41,53 @@ class Listener
 
     public function subscribe(Dispatcher $events)
     {
+        $events->listen(Get::class, [$this, 'get']);
         $events->listen(Loaded::class, [$this, 'cache']);
-        $events->listen(Deleted::class, [$this, 'forget']);
+        $events->listen(Delete::class, [$this, 'forget']);
     }
 
-    protected function key(Part $part): string
+    public function get(Get $event)
     {
-        return sprintf('parts.%s.%d', get_class($part), $part->id);
+        $key = $this->key($event->class, $event->id);
+
+        if ($key && $this->cache->has($key)) {
+            return $this->cache->get($key);
+        }
+
+        logs("Cache miss for $key.");
     }
 
     public function cache(Loaded $event)
     {
-        $this->cache->forever($this->key($event->part), $event->part);
+        $key = $this->keyFromPart($event->part);
 
-        $this->events->dispatch(new Cached($event->part));
+        if ($key) {
+            $this->cache->forever($key, $event->part);
+
+            $this->events->dispatch(new Cached($event->part));
+        }
     }
 
     public function forget(Deleted $event)
     {
-        $this->cache->forget($this->key($event->part));
+        $key = $this->keyFromPart($event->part);
+
+        if ($key) {
+            $this->cache->forget($key);
+        }
+    }
+
+    protected function keyFromPart(Part $part): ?string
+    {
+        return $this->key(get_class($part), $part->getKey());
+    }
+
+    protected function key(string $class, string $id = null): ?string
+    {
+        if (! $id) {
+            return false;
+        }
+
+        return sprintf('parts.%s.%d', $class, $id);
     }
 }

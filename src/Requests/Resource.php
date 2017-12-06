@@ -25,9 +25,9 @@ class Resource extends Request
 
     /**
      * @param string $part
-     * @return Resource
+     * @return static
      */
-    public function setPart(string $part): Resource
+    public function setPart(string $part)
     {
         $this->part = $part;
 
@@ -36,8 +36,9 @@ class Resource extends Request
 
     public function get($id)
     {
-        $this->part->id = $id;
-        $this->path = $this->part->getEndpoint('get');
+        $part = app()->make($this->part);
+        $part->id = $id;
+        $this->path = $part->getEndpoint('get');
 
         return $this->request();
     }

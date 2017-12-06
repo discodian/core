@@ -105,7 +105,7 @@ class Application extends Container implements Contract
         try {
             (new Dotenv($this->basePath))->load();
         } catch (InvalidPathException $e) {
-            // ..
+            logs("No .env file found in {$this->basePath}.");
         }
     }
 

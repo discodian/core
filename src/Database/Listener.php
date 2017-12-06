@@ -14,7 +14,7 @@
 
 namespace Discodian\Core\Database;
 
-use Discodian\Core\Events\Parts\Deleted;
+use Discodian\Core\Events\Parts\Delete;
 use Discodian\Core\Events\Parts\Loaded;
 use Discodian\Core\Events\Parts\Persisted;
 use Discodian\Parts\Part;
@@ -35,7 +35,7 @@ class Listener
     public function subscribe(Dispatcher $events)
     {
         $events->listen(Loaded::class, [$this, 'persist']);
-        $events->listen(Deleted::class, [$this, 'delete']);
+        $events->listen(Delete::class, [$this, 'delete']);
     }
 
     public function persist(Loaded $event)

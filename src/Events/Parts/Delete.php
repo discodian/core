@@ -17,7 +17,7 @@ namespace Discodian\Core\Events\Parts;
 use Discodian\Core\Events\Event;
 use Discodian\Parts\Part;
 
-class Deleted extends Event
+class Delete extends Event
 {
     /**
      * @var Part
