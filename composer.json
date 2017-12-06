@@ -25,7 +25,8 @@
         "symfony/http-foundation": "^3.3.12",
         "ratchet/pawl": "^0.3.1",
         "monolog/monolog": "^1.23.0",
-        "discodian/parts": "*"
+        "discodian/parts": "*",
+        "discodian/extend": "*"
     },
     "autoload": {
         "psr-4": {

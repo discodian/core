@@ -14,7 +14,6 @@
 
 namespace Discodian\Core\Foundation;
 
-use Discodian\Core\Extensions\ExtensionManager;
 use Discodian\Core\Providers\CacheProvider;
 use Discodian\Core\Providers\DatabaseProvider;
 use Discodian\Core\Providers\EventProvider;
@@ -23,6 +22,7 @@ use Discodian\Core\Providers\LogProvider;
 use Discodian\Core\Providers\PartProvider;
 use Discodian\Core\Providers\SocketProvider;
 use Discodian\Core\Socket\Connector;
+use Discodian\Extend\Manager;
 use Dotenv\Dotenv;
 use Dotenv\Exception\InvalidPathException;
 use Illuminate\Container\Container;
@@ -71,7 +71,7 @@ class Application extends Container implements Contract
 
         $this->alias(\Illuminate\Contracts\Config\Repository::class, 'config');
 
-        $this->singleton(ExtensionManager::class);
+        $this->singleton(Manager::class);
 
         $this->alias(\GuzzleHttp\Client::class, \GuzzleHttp\ClientInterface::class);
 
@@ -89,6 +89,7 @@ class Application extends Container implements Contract
     {
         /** @var \Illuminate\Contracts\Config\Repository $config */
         $config = $this->make('config');
+
         foreach (new \DirectoryIterator($this->configPath()) as $file) {
             if ($file->getExtension() === 'php' && $path = $file->getRealPath()) {
                 $config->set($file->getBasename('.php'), include $path);
@@ -105,7 +106,7 @@ class Application extends Container implements Contract
         try {
             (new Dotenv($this->basePath))->load();
         } catch (InvalidPathException $e) {
-            logs("No .env file found in {$this->basePath}.");
+            // ..
         }
     }
 
@@ -260,7 +261,7 @@ class Application extends Container implements Contract
         $this->fireAppCallback($this->bootingCallbacks);
 
         /** @var ExtensionManager $manager */
-        $manager = $this->make(ExtensionManager::class);
+        $manager = $this->make(Manager::class);
 
         $manager->boot();
 
