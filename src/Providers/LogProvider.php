@@ -18,6 +18,9 @@ use Discodian\Core\Events\Log\RegistersHandlers;
 use Discodian\Core\Events\Log\RegistersLogger;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Monolog\ErrorHandler;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -30,18 +33,15 @@ class LogProvider extends ServiceProvider
         $this->app->singleton(LoggerInterface::class, function (Application $app) {
             $handlers = [];
 
-            if ($path = config('log.path')) {
-                $handlers[] = new StreamHandler(
-                    sprintf('%s%s.log', $path, date('Y-m-d')),
-                    Logger::INFO
-                );
-            }
+            $formatter = new LineFormatter();
+            $formatter->includeStacktraces();
 
             if ($app->runningInConsole()) {
-                $handlers[] = new StreamHandler(
-                    $app->make(ConsoleOutputInterface::class)->getStream(),
-                    $app->environment('production') ? Logger::ERROR : Logger::DEBUG
-                );
+                $handlers[] = $this->consoleHandler($app, $formatter);
+            }
+
+            if ($path = config('log.path')) {
+                $handlers[] = $this->fileHandler($app, $path, $formatter);
             }
 
             $app['events']->dispatch(new RegistersHandlers($handlers));
@@ -52,5 +52,36 @@ class LogProvider extends ServiceProvider
 
             return $logger;
         });
+
+        $this->registerErrorHandler();
+    }
+
+    protected function registerErrorHandler()
+    {
+        $this->app->call([ErrorHandler::class, 'register']);
+    }
+
+    protected function fileHandler($app, string $path, $formatter): HandlerInterface
+    {
+        $handler = new StreamHandler(
+            sprintf('%s%s.log', $path, date('Y-m-d')),
+            $app->environment('production') ? Logger::INFO : Logger::ERROR
+        );
+
+        $handler->setFormatter($formatter);
+
+        return $handler;
+    }
+
+    protected function consoleHandler($app, $formatter): HandlerInterface
+    {
+        $handler = new StreamHandler(
+            $app->make(ConsoleOutputInterface::class)->getStream(),
+            $app->environment('production') ? Logger::ERROR : Logger::DEBUG
+        );
+
+        $handler->setFormatter($formatter);
+
+        return $handler;
     }
 }

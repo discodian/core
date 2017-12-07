@@ -14,7 +14,7 @@
 
 namespace Discodian\Core\Providers;
 
-use Discodian\Core\Factory\Repository;
+use Discodian\Core\Parts\Repository;
 use Discodian\Core\Requests\Listener;
 use Illuminate\Support\ServiceProvider;
 use Discodian\Parts\Contracts\Registry as Contract;

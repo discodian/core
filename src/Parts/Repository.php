@@ -12,7 +12,7 @@
  * @see https://github.com/discodian
  */
 
-namespace Discodian\Core\Factory;
+namespace Discodian\Core\Parts;
 
 use Discodian\Core\Events\Parts as Events;
 use Discodian\Parts;

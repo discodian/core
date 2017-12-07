@@ -12,7 +12,7 @@
  * @see https://github.com/discodian
  */
 
-namespace Discodian\Core\Factory;
+namespace Discodian\Core\Parts;
 
 use Carbon\Carbon;
 use Discodian\Core\Events\Parts\Deleted;
@@ -71,10 +71,14 @@ class Factory
         $part = new $class();
 
         foreach ($data as $property => $value) {
-            if (!$this->carbon($part, $property, $value)
-                && !$this->relations($part, $property, $value)
-            ) {
-                $part->{$property} = $value;
+            $part->{$property} = $value;
+
+            if ($this->relations($part, $property, $value)) {
+                continue;
+            }
+
+            if ($this->carbon($part, $property, $value)) {
+                continue;
             }
         }
 
@@ -113,8 +117,11 @@ class Factory
             $class = $this->registry->get($m['part'])) {
             if (is_array($value) || is_object($value)) {
                 $part->{$m['part']} = $this->part($class, (array)$value);
-            } else {
+            } else if (is_string($value) && !empty($value)) {
                 $part->{$m['part']} = $this->get($class, $value);
+            } else {
+                logs("Not sure what to do with $property, resolving $class and value: ", $value, $part->toArray());
+                $part->{$m['part']} = null;
             }
         } else {
             return false;

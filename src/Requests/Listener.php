@@ -15,7 +15,7 @@
 namespace Discodian\Core\Requests;
 
 use Discodian\Core\Events\Parts\Get;
-use Discodian\Core\Factory\Factory;
+use Discodian\Core\Parts\Factory;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class Listener

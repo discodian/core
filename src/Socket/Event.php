@@ -14,7 +14,7 @@
 
 namespace Discodian\Core\Socket;
 
-use Discodian\Core\Factory\Factory;
+use Discodian\Core\Parts\Factory;
 use GuzzleHttp\ClientInterface;
 use React\Promise\Deferred;
 
