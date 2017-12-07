@@ -107,7 +107,6 @@ class Factory
             }
         } elseif (preg_match('/(?<part>[a-z_]+?)(_id)?$/', $property, $m) &&
             $class = $this->registry->get($m['part'])) {
-            logs(get_class($part), $class, $property);
             if (is_array($value) || is_object($value)) {
                 $part->{$m['part']} = $this->part($class, (array)$value);
             } else {
