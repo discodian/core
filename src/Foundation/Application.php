@@ -21,6 +21,7 @@ use Discodian\Core\Providers\HttpProvider;
 use Discodian\Core\Providers\LogProvider;
 use Discodian\Core\Providers\PartProvider;
 use Discodian\Core\Providers\SocketProvider;
+use Discodian\Core\Providers\ViewProvider;
 use Discodian\Core\Socket\Connector;
 use Discodian\Extend\Manager;
 use Discodian\Extend\Providers\ExtendProvider;
@@ -206,6 +207,7 @@ class Application extends Container implements Contract
     public function registerConfiguredProviders()
     {
         foreach ([
+                     ViewProvider::class,
                      EventProvider::class,
                      DatabaseProvider::class,
                      CacheProvider::class,

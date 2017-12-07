@@ -14,6 +14,7 @@
 
 use Illuminate\Container\Container;
 use Psr\Log\LoggerInterface;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 
 if (! function_exists('app')) {
     /**
@@ -145,5 +146,24 @@ if (! function_exists('logs')) {
         }
 
         $logger->{$type}($message, $data);
+    }
+}
+
+if (! function_exists('view')) {
+    /**
+     * Get the evaluated view contents for the given view.
+     *
+     * @param  string  $view
+     * @param  array   $data
+     * @param  array   $mergeData
+     * @return \Illuminate\View\View|\Illuminate\Contracts\View\Factory
+     */
+    function view($view = null, $data = [], $mergeData = [])
+    {
+        $factory = app(ViewFactory::class);
+        if (func_num_args() === 0) {
+            return $factory;
+        }
+        return $factory->file($view, $data, $mergeData)->render();
     }
 }
