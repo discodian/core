@@ -98,9 +98,13 @@ class Factory
                 $set = new Collection();
                 foreach ($value as $item) {
                     if (is_object($item)) {
-                        $set->push($this->part($class, (array)$item));
+                        $entry = $this->part($class, (array)$item);
                     } elseif (is_string($item)) {
-                        $set->push($this->get($class, $item));
+                        $entry = $this->get($class, $item);
+                    }
+
+                    if ($entry) {
+                        $set->put($entry->getKey(), $entry);
                     }
                 }
                 $part->{$property} = $set;

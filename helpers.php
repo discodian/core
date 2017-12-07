@@ -124,6 +124,7 @@ if (! function_exists('logs')) {
             return $logger;
         }
 
+        $message = '';
         $type = 'debug';
         $data = [];
 

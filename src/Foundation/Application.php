@@ -43,6 +43,7 @@ class Application extends Container implements Contract
     protected $bootingCallbacks = [];
     protected $bootedCallbacks = [];
     protected $booted = false;
+    protected $providers = [];
 
     public function __construct(string $basePath)
     {
@@ -229,13 +230,11 @@ class Application extends Container implements Contract
      */
     public function register($provider, $options = [], $force = false)
     {
-        $provider = new $provider($this);
-        if (method_exists($provider, 'register')) {
-            $this->call([$provider, 'register']);
+        $instance = new $provider($this);
+        if (method_exists($instance, 'register')) {
+            $this->call([$instance, 'register']);
         }
-        if (method_exists($provider, 'boot')) {
-            $this->call([$provider, 'boot']);
-        }
+        $this->providers[$provider] = $instance;
     }
 
     /**
@@ -262,6 +261,12 @@ class Application extends Container implements Contract
         }
 
         $this->fireAppCallback($this->bootingCallbacks);
+
+        foreach ($this->providers as $provider) {
+            if (method_exists($provider, 'boot')) {
+                $this->call([$provider, 'boot']);
+            }
+        }
 
         /** @var ExtensionManager $manager */
         $manager = $this->make(Manager::class);
@@ -322,6 +327,8 @@ class Application extends Container implements Contract
 
     public function run()
     {
+        $this->boot();
+
         /** @var Connector $connector */
         $connector = $this->make(Connector::class);
 
