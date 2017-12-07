@@ -117,7 +117,7 @@ class Factory
             $class = $this->registry->get($m['part'])) {
             if (is_array($value) || is_object($value)) {
                 $part->{$m['part']} = $this->part($class, (array)$value);
-            } else if (is_string($value) && !empty($value)) {
+            } elseif (is_string($value) && !empty($value)) {
                 $part->{$m['part']} = $this->get($class, $value);
             } else {
                 logs("Not sure what to do with $property, resolving $class and value: ", $value, $part->toArray());
