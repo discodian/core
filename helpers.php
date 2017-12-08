@@ -164,6 +164,6 @@ if (! function_exists('view')) {
         if (func_num_args() === 0) {
             return $factory;
         }
-        return $factory->file($view, $data, $mergeData)->render();
+        return $factory->file($view, $data, $mergeData);
     }
 }
