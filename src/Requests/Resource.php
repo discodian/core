@@ -46,7 +46,7 @@ class Resource extends Request
         $promise = $this->request();
 
         $promise->then(function ($response) use (&$part) {
-            foreach($response as $attribute => $value) {
+            foreach ($response as $attribute => $value) {
                 $part->{$attribute} = $value;
             }
         });
