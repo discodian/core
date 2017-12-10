@@ -14,11 +14,15 @@
 
 namespace Discodian\Core\Response;
 
+use Discodian\Core\Requests\Channels\OpenDirectMessage;
+use Discodian\Core\Requests\Channels\SendMessage;
 use Discodian\Extend\Messages\Message;
 use Discodian\Extend\Responses\Response;
 use Discodian\Extend\Responses\TextResponse;
+use Discodian\Parts\Channel\Channel;
 use GuzzleHttp\ClientInterface;
-use JiraRestApi\Project\Project;
+use Discodian\Core\Parts\Factory as PartFactory;
+use function GuzzleHttp\Promise\settle;
 
 class Factory
 {
@@ -26,37 +30,36 @@ class Factory
      * @var ClientInterface
      */
     private $http;
+    /**
+     * @var PartFactory
+     */
+    private $parts;
 
-    public function __construct(ClientInterface $http)
+    public function __construct(ClientInterface $http, PartFactory $parts)
     {
         $this->http = $http;
+        $this->parts = $parts;
     }
 
     public function respond(Message $message, Response $response)
     {
-        $body = [];
-
-        if ($response instanceof TextResponse) {
-            if ($response->private && !$message->channel->is_private) {
-                logs("Extension requests private response on public channel.");
-                // @todo create dm channel
-            } else {
-                $path  = "channels/{$message->channel_id}/messages";
-            }
-            $body = [
-                'content' => $response->content,
-                'tts' => $response->tts,
-                'embed' => $response->embed
-            ];
+        if ($response->private && !$message->channel->is_private) {
+            $channel = $this->createPrivateChannel($message);
         } else {
-            logs("Unhandled response: " . get_class($response));
+            $channel = $message->channel;
         }
 
-        if (isset($path)) {
-            // @todo async promises
-            $this->http->request('post', $path, [
-                'json' => $body
-            ]);
-        }
+        $promise = (new SendMessage($channel->id, $response))->request();
+
+        return $promise->wait();
+    }
+
+    public function createPrivateChannel(Message $message): Channel
+    {
+        $promise = (new OpenDirectMessage($message->author))->request();
+
+        $response = settle($promise)->wait();
+
+        return $this->parts->create(Channel::class, $response);
     }
 }

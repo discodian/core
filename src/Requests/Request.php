@@ -38,9 +38,25 @@ abstract class Request
     protected $path;
 
     /**
+     * Request method
+     *
      * @var string
      */
     protected $method = 'get';
+
+    /**
+     * JSON params to sent along.
+     *
+     * @var array
+     */
+    protected $params = [];
+
+    /**
+     * Properties of the object to work with.
+     *
+     * @var array
+     */
+    protected $properties = [];
 
     /**
      * @var ClientInterface
@@ -53,7 +69,7 @@ abstract class Request
     public function request()
     {
         return static::getHttp()
-            ->requestAsync($this->method, $this->path)
+            ->requestAsync($this->method, $this->getPath(), $this->buildParams())
             ->then(function (Response $response) {
                 $this->processRateLimits(new HeaderBag($response->getHeaders()));
 
@@ -103,5 +119,20 @@ abstract class Request
         }
 
         return static::$http;
+    }
+
+    protected function buildParams(): array
+    {
+        return empty($this->params) ? [] : [
+            'json' => $this->params
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public function getPath(): string
+    {
+        return path_injection($this->path, $this->properties);
     }
 }

@@ -13,6 +13,8 @@
  */
 
 use Illuminate\Container\Container;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 
@@ -165,5 +167,18 @@ if (! function_exists('view')) {
             return $factory;
         }
         return $factory->file($view, $data, $mergeData);
+    }
+}
+
+if (! function_exists('path_injection')) {
+    function path_injection(string $path, array $properties = []): string
+    {
+        if (empty($properties)) {
+            return $path;
+        }
+
+        return preg_replace_callback('/:(?<property>[a-z_]+)/', function ($m) use ($properties) {
+            return Arr::get($properties, $m['property'], $m[0]);
+        }, $path);
     }
 }
