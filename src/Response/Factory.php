@@ -20,7 +20,7 @@ use Discodian\Extend\Responses\TextResponse;
 use GuzzleHttp\ClientInterface;
 use JiraRestApi\Project\Project;
 
-class Handler
+class Factory
 {
     /**
      * @var ClientInterface
@@ -32,7 +32,7 @@ class Handler
         $this->http = $http;
     }
 
-    public function to(Message $message, Response $response)
+    public function respond(Message $message, Response $response)
     {
         $body = [];
 
