@@ -38,6 +38,6 @@ class MessageUpdate extends Event
 
         $this->factory->set($newMessage);
 
-        $deferred->resolve([$messagePart, $message]);
+        $deferred->resolve([$messagePart, $newMessage]);
     }
 }

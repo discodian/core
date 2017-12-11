@@ -22,6 +22,7 @@ use Discodian\Parts\Part;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use function PHPSTORM_META\type;
 
 /**
  * @method Part|null get(string $class, string $id)

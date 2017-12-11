@@ -17,6 +17,7 @@ namespace Discodian\Core\Requests;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Psr7\Response;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\HeaderBag;
 
 /**
@@ -73,11 +74,19 @@ abstract class Request
             ->then(function (Response $response) {
                 $this->processRateLimits(new HeaderBag($response->getHeaders()));
 
+                $output = null;
+
                 if ($response->getHeaderLine('content-type') === 'application/json') {
-                    return \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
+                    $output = \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
+                    logs("Output keys", array_keys($output));
+                    if (Arr::get($response, 'state') === 'fulfilled') {
+                        $output = Arr::get($response, 'value', []);
+                    }
+                } else {
+                    $output = $response;
                 }
 
-                return $response;
+                return $output;
             }, function (\Exception $e) {
                 logs("Request failed {$e->getMessage()}", $e->getTrace());
             });

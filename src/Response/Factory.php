@@ -43,11 +43,14 @@ class Factory
 
     public function respond(Message $message, Response $response)
     {
+        $channel = $message->channel;
+
         if ($response->private && !$message->channel->is_private) {
             $channel = $this->createPrivateChannel($message);
-        } else {
-            $channel = $message->channel;
+            logs($channel);
         }
+
+        logs("Response factory ::respond channel", $channel->toArray());
 
         $promise = (new SendMessage($channel->id, $response))->request();
 
@@ -58,7 +61,7 @@ class Factory
     {
         $promise = (new OpenDirectMessage($message->author))->request();
 
-        $response = settle($promise)->wait();
+        $response = $promise->wait();
 
         return $this->parts->create(Channel::class, $response);
     }
