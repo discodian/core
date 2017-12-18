@@ -78,7 +78,7 @@ abstract class Request
 
                 if ($response->getHeaderLine('content-type') === 'application/json') {
                     $output = \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
-                    logs("Output keys", array_keys($output));
+
                     if (Arr::get($response, 'state') === 'fulfilled') {
                         $output = Arr::get($response, 'value', []);
                     }
