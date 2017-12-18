@@ -14,6 +14,8 @@
 
 namespace Discodian\Core;
 
-$app = new Foundation\Application(__DIR__.'/../../../../');
+$basePath = env('DISCODIAN_ROOT_PATH', __DIR__.'/../../../../');
+
+$app = new Foundation\Application($basePath);
 
 return $app;
