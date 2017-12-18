@@ -77,6 +77,11 @@ class Connector
     protected $isReady = false;
 
     /**
+     * @var int
+     */
+    protected $shards = 0;
+
+    /**
      * The package sequence.
      *
      * @var int
@@ -151,10 +156,10 @@ class Connector
                         'v' => config('discord.versions.gateway'),
                         'encoding' => 'json'
                     ]);
-            // @todo sharding implementation.
-            $shards = Arr::get($response, 'shards');
 
-            logs("Gateway request returned url {$this->url} and shards {$shards}.");
+            $this->shards = Arr::get($response, 'shards');
+
+            logs("Gateway request returned url {$this->url} and shards {$this->shards}.");
 
             $this->connectWs();
         })
