@@ -14,6 +14,7 @@
 
 namespace Discodian\Core\Events\Log;
 
+use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\HandlerInterface;
 
 class RegistersHandlers
@@ -22,9 +23,14 @@ class RegistersHandlers
      * @var array|HandlerInterface[]
      */
     public $handlers;
+    /**
+     * @var FormatterInterface
+     */
+    public $formatter;
 
-    public function __construct(array &$handlers)
+    public function __construct(array &$handlers, FormatterInterface $formatter)
     {
         $this->handlers = &$handlers;
+        $this->formatter = $formatter;
     }
 }

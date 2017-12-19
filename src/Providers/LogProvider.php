@@ -44,7 +44,7 @@ class LogProvider extends ServiceProvider
                 $handlers[] = $this->fileHandler($app, $path, $formatter);
             }
 
-            $app['events']->dispatch(new RegistersHandlers($handlers));
+            $app['events']->dispatch(new RegistersHandlers($handlers, $formatter));
 
             $logger = new Logger($app->userAgent(), $handlers);
 
