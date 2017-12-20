@@ -30,8 +30,11 @@ class PresenceUpdate extends Event
         $presenceUpdate = $this->factory->create(PresenceUpdatePart::class, $data);
         $old            = null;
 
+        /** @var Guild $guild */
         $guild = $this->factory->get(Guild::class, $data->d->guild_id);
-        $member = $this->factory->get(Member::class, $presenceUpdate->user->id);
+
+        /** @var Member $member */
+        $member = $guild->members->get($presenceUpdate->user->id);
 
         if (! is_null($member)) {
             $rawOld = array_merge([
@@ -48,7 +51,7 @@ class PresenceUpdate extends Event
                 'status'   => $rawOld['status'],
                 'game'     => $rawOld['game'],
                 'nick'     => $rawOld['nick'],
-            ], true);
+            ]);
 
             $member->fill([
                 'status' => $presenceUpdate->status,
@@ -57,7 +60,7 @@ class PresenceUpdate extends Event
                 'game'   => $presenceUpdate->game,
             ]);
 
-            $guild->members->push($member);
+            $guild->members->put($member->getKey(), $member);
 
             $this->factory->set($member);
             $this->factory->set($guild);
