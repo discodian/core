@@ -28,6 +28,8 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
 
 class LogProvider extends ServiceProvider
 {
+    protected $defer;
+
     public function register()
     {
         $this->app->singleton(LoggerInterface::class, function (Application $app) {
@@ -43,7 +45,6 @@ class LogProvider extends ServiceProvider
             if ($path = config('log.path')) {
                 $handlers[] = $this->fileHandler($app, $path, $formatter);
             }
-
             $app['events']->dispatch(new RegistersHandlers($handlers, $formatter));
 
             $logger = new Logger($app->userAgent(), $handlers);
@@ -52,7 +53,10 @@ class LogProvider extends ServiceProvider
 
             return $logger;
         });
+    }
 
+    public function boot()
+    {
         $this->registerErrorHandler();
     }
 
@@ -83,5 +87,12 @@ class LogProvider extends ServiceProvider
         $handler->setFormatter($formatter);
 
         return $handler;
+    }
+
+    public function provides()
+    {
+        return [
+            LoggerInterface::class
+        ];
     }
 }

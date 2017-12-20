@@ -264,16 +264,16 @@ class Application extends Container implements Contract
 
         $this->fireAppCallback($this->bootingCallbacks);
 
+        /** @var ExtensionManager $manager */
+        $manager = $this->make(Manager::class);
+
+        $manager->boot();
+
         foreach ($this->providers as $provider) {
             if (method_exists($provider, 'boot')) {
                 $this->call([$provider, 'boot']);
             }
         }
-
-        /** @var ExtensionManager $manager */
-        $manager = $this->make(Manager::class);
-
-        $manager->boot();
 
         $this->fireAppCallback($this->bootedCallbacks);
     }
