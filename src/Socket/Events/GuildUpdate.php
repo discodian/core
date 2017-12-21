@@ -31,7 +31,7 @@ class GuildUpdate extends Event
             return;
         }
 
-        $old = $this->discord->guilds->get('id', $data->id);
+        $old = $this->factory->get(Guild::class, $data->id);
 
         $guildPart = $this->factory->create(Guild::class, $data);
 
