@@ -16,7 +16,7 @@ namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
 use Discodian\Parts\Guild\Guild;
-use Discord\Parts\User\Member;
+use Discodian\Parts\Guild\Member;
 use React\Promise\Deferred;
 
 class GuildMemberRemove extends Event
@@ -26,7 +26,7 @@ class GuildMemberRemove extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $memberPart = $this->factory->create(Member::class, $data, true);
+        $memberPart = $this->factory->create(Member::class, $data);
 
         $guild = $this->factory->get(Guild::class, $memberPart->guild_id);
 
