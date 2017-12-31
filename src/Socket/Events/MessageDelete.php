@@ -25,7 +25,7 @@ class MessageDelete extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $this->factory->deleteIds(Message::class, [$data->id]);
+        $this->factory->deleteIds(Message::class, [$data->d->id]);
 
         $deferred->resolve();
     }
