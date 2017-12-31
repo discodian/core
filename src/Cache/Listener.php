@@ -68,7 +68,7 @@ class Listener
         }
     }
 
-    public function forget(Deleted $event)
+    public function forget(Delete $event)
     {
         $key = $this->keyFromPart($event->part);
 
