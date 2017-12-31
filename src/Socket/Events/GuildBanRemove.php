@@ -15,6 +15,7 @@
 namespace Discodian\Core\Socket\Events;
 
 use Discodian\Core\Socket\Event;
+use Discodian\Parts\Guild\Ban;
 use React\Promise\Deferred;
 
 class GuildBanRemove extends Event
