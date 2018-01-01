@@ -15,6 +15,7 @@
 namespace Discodian\Core\Parts;
 
 use Discodian\Core\Events\Parts as Events;
+use Discodian\Core\Exceptions\InvalidEndpointException;
 use Discodian\Parts;
 use Discodian\Parts\Part;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -86,7 +87,11 @@ class Repository
     public function deleteIds(string $class, array $ids)
     {
         foreach ($ids as $id) {
-            $part = $this->get($class, $id);
+            try {
+                $part = $this->get($class, $id);
+            } catch (InvalidEndpointException $e) {
+                $part = null;
+            }
 
             if ($part) {
                 $this->delete($part);
