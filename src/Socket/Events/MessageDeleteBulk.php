@@ -25,7 +25,7 @@ class MessageDeleteBulk extends Event
      */
     public function __invoke(Deferred $deferred, \stdClass $data)
     {
-        $this->factory->deleteIds(Message::class, $data->ids);
+        $this->factory->deleteIds(Message::class, $data->d->ids);
 
         $deferred->resolve($data);
     }
