@@ -78,7 +78,7 @@ class SchedulingHandler
             }
 
             if ($response instanceof Response) {
-                $this->response->respond($response);
+                $this->response->send($response);
             }
         }
 
