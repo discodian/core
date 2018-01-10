@@ -22,7 +22,6 @@ use Discodian\Parts\Channel\Channel;
 use GuzzleHttp\ClientInterface;
 use Discodian\Core\Parts\Factory as PartFactory;
 
-
 class Factory
 {
     /**
