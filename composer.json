@@ -16,6 +16,7 @@
         "illuminate/cache": "5.5.*",
         "illuminate/config": "5.5.*",
         "illuminate/container": "5.5.*",
+        "illuminate/console": "5.5.*",
         "illuminate/database": "5.5.*",
         "illuminate/events": "5.5.*",
         "illuminate/filesystem": "5.5.*",

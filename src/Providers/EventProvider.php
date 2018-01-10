@@ -26,6 +26,7 @@ class EventProvider extends ServiceProvider
         Listeners\HelloHandler::class,
         Listeners\MessageNormalizer::class,
         Listeners\ReadyHandler::class,
+        Listeners\SchedulingHandler::class,
     ];
 
     public function register()
