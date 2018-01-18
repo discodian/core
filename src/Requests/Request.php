@@ -83,25 +83,25 @@ abstract class Request
             $promise = static::getHttp()->requestAsync($this->method, $path, $this->buildParams());
 
             $promise->then(function (Response $response) use (&$request, $path, $defer) {
-                    $this->processRateLimits($path, new HeaderBag($response->getHeaders()));
-                    $this->preventRateLimiting($path, $response, $request);
-                    $this->handleEndpointFailures($response, $defer, $request);
+                $this->processRateLimits($path, new HeaderBag($response->getHeaders()));
+                $this->preventRateLimiting($path, $response, $request);
+                $this->handleEndpointFailures($response, $defer, $request);
 
-                    if ($response->getHeaderLine('content-type') === 'application/json') {
-                        $output = \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
+                if ($response->getHeaderLine('content-type') === 'application/json') {
+                    $output = \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
 
-                        if (Arr::get($response, 'state') === 'fulfilled') {
-                            $output = Arr::get($response, 'value', []);
-                        }
-                    } else {
-                        $output = $response;
+                    if (Arr::get($response, 'state') === 'fulfilled') {
+                        $output = Arr::get($response, 'value', []);
                     }
+                } else {
+                    $output = $response;
+                }
 
-                    $defer->resolve($output);
-                }, function (\Exception $e) use ($defer) {
-                    logs("Request failed {$e->getMessage()}", $e->getTrace());
-                    $defer->reject($e);
-                });
+                $defer->resolve($output);
+            }, function (\Exception $e) use ($defer) {
+                logs("Request failed {$e->getMessage()}", $e->getTrace());
+                $defer->reject($e);
+            });
         };
 
         if ($this->rateLimited) {
