@@ -163,7 +163,6 @@ class Connector
         logs("Gateway request returned url {$this->url} and shards {$this->shards}.");
 
         $this->connectWs();
-
     }
 
     public function run()
