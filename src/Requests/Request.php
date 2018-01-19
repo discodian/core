@@ -87,36 +87,36 @@ abstract class Request
      */
     public function request()
     {
-        $defer = new Deferred();
+        $promise = null;
 
         $path = $this->getPath();
 
-        $request = function () use (&$request, $path, $defer) {
+        $request = function () use (&$request, $path, &$promise) {
             $promise = static::getHttp()->requestAsync($this->method, $path, $this->buildParams());
 
-            $promise->then(function (Response $response) use (&$request, $path, $defer) {
+            $promise->then(function (Response $response) use (&$request, $path, $promise) {
                 $this->processRateLimits($path, $response->getHeaders());
                 $this->preventRateLimiting($path, $response, $request);
-                $this->handleEndpointFailures($response, $defer, $request);
+                $this->handleEndpointFailures($response, $promise, $request);
 
                 $output = $this->parseResponseBody($response);
 
-                $defer->resolve($output);
-            }, function (Exception $e) use ($defer) {
+                $promise->resolve($output);
+            }, function (Exception $e) use ($promise) {
                 logs("Request failed {$e->getMessage()}", $e->getTrace());
-                $defer->reject($e);
+                $promise->reject($e);
             });
         };
 
         if ($this->rateLimited) {
             $defer = new Deferred();
             $defer->promise()->then($request());
-            $this->queued[] = $defer;
+            $this->queued[] = $promise;
         } else {
             $request();
         }
 
-        return $defer->promise();
+        return $promise;
     }
 
     protected function parseResponseBody(Response $response)
@@ -136,7 +136,7 @@ abstract class Request
         return $output;
     }
 
-    protected function handleEndpointFailures(Response $response, Deferred $defer, $request)
+    protected function handleEndpointFailures(Response $response, $defer, $request)
     {
         $code = $response->getStatusCode();
         if (in_array($code, [502, 525])) {
