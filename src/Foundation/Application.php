@@ -209,6 +209,7 @@ class Application extends Container implements Contract
     {
         foreach ([
                      CacheProvider::class,
+                     PartProvider::class,
                      SchedulingProvider::class,
                      ViewProvider::class,
                      EventProvider::class,
@@ -216,7 +217,6 @@ class Application extends Container implements Contract
                      LogProvider::class,
                      HttpProvider::class,
                      SocketProvider::class,
-                     PartProvider::class,
 
                      ExtendProvider::class,
                  ] as $provider) {
