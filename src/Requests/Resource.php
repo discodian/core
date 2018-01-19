@@ -15,6 +15,7 @@
 namespace Discodian\Core\Requests;
 
 use Discodian\Parts\Part;
+use function React\Promise\resolve;
 
 class Resource extends Request
 {
@@ -51,7 +52,7 @@ class Resource extends Request
             }
         });
 
-        $promise->resolve($part);
+        resolve($promise);
 
         return $part;
     }

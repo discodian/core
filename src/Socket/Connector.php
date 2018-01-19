@@ -18,6 +18,8 @@ use Discodian\Core\Events;
 use Discodian\Core\Exceptions\MisconfigurationException;
 use Discodian\Core\Requests\GatewayRequest;
 use GuzzleHttp\ClientInterface;
+use function GuzzleHttp\Promise\all;
+use function GuzzleHttp\Promise\settle;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
@@ -149,25 +151,19 @@ class Connector
 
         logs('Starting Gateway request');
 
-        $promise = (new GatewayRequest())->request();
+        $response = (new GatewayRequest())->requestBlocking();
 
-        $promise->then(function ($response) {
-            $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
-                        'v' => config('discord.versions.gateway'),
-                        'encoding' => 'json'
-                    ]);
+        $this->url = rtrim(Arr::get($response, 'url'), '/') . '/?' . http_build_query([
+                    'v' => config('discord.versions.gateway'),
+                    'encoding' => 'json'
+                ]);
 
-            $this->shards = Arr::get($response, 'shards');
+        $this->shards = Arr::get($response, 'shards');
 
-            logs("Gateway request returned url {$this->url} and shards {$this->shards}.");
+        logs("Gateway request returned url {$this->url} and shards {$this->shards}.");
 
-            $this->connectWs();
-        })
-        ->otherwise(function ($e) {
-            $this->wsClose(Op::CLOSE_ABNORMAL, $e);
-        });
+        $this->connectWs();
 
-        $promise->wait();
     }
 
     public function run()

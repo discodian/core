@@ -15,8 +15,8 @@
 namespace Discodian\Core\Requests;
 
 use Carbon\Carbon;
+use Exception;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Arr;
 use React\EventLoop\LoopInterface;
@@ -70,8 +70,20 @@ abstract class Request
      */
     protected static $http;
 
+    public function requestBlocking()
+    {
+        $path = $this->getPath();
+
+        $response = static::getHttp()->request($this->method, $path, $this->buildParams());
+
+        $this->processRateLimits($path, $response->getHeaders());
+        $this->preventRateLimiting($path, $response);
+
+        return $this->parseResponseBody($response);
+    }
+
     /**
-     * @return Promise
+     * @return \React\Promise\Promise
      */
     public function request()
     {
@@ -83,22 +95,14 @@ abstract class Request
             $promise = static::getHttp()->requestAsync($this->method, $path, $this->buildParams());
 
             $promise->then(function (Response $response) use (&$request, $path, $defer) {
-                $this->processRateLimits($path, new HeaderBag($response->getHeaders()));
+                $this->processRateLimits($path, $response->getHeaders());
                 $this->preventRateLimiting($path, $response, $request);
                 $this->handleEndpointFailures($response, $defer, $request);
 
-                if ($response->getHeaderLine('content-type') === 'application/json') {
-                    $output = \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
-
-                    if (Arr::get($response, 'state') === 'fulfilled') {
-                        $output = Arr::get($response, 'value', []);
-                    }
-                } else {
-                    $output = $response;
-                }
+                $output = $this->parseResponseBody($response);
 
                 $defer->resolve($output);
-            }, function (\Exception $e) use ($defer) {
+            }, function (Exception $e) use ($defer) {
                 logs("Request failed {$e->getMessage()}", $e->getTrace());
                 $defer->reject($e);
             });
@@ -113,6 +117,23 @@ abstract class Request
         }
 
         return $defer->promise();
+    }
+
+    protected function parseResponseBody(Response $response)
+    {
+        $output = null;
+
+        if ($response->getHeaderLine('content-type') === 'application/json') {
+            $output = \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
+
+            if (Arr::get($response, 'state') === 'fulfilled') {
+                $output = Arr::get($response, 'value', []);
+            }
+        } else {
+            $output = $response;
+        }
+
+        return $output;
     }
 
     protected function handleEndpointFailures(Response $response, Deferred $defer, $request)
@@ -133,7 +154,7 @@ abstract class Request
      * @param $request
      * @return bool
      */
-    protected function preventRateLimiting(string $path, Response $response, $request): bool
+    protected function preventRateLimiting(string $path, Response $response, $request = null): bool
     {
         $remaining = Arr::get($this->rate_remaining, $path);
         $resetsAt = Arr::get($this->rate_reset, $path);
@@ -149,7 +170,7 @@ abstract class Request
             }
 
             // In case we hit the rate limit already, put the current request back on the stack.
-            if ($response->getStatusCode() === 429) {
+            if ($request && $response->getStatusCode() === 429) {
                 $this->queued = $request;
             }
 
@@ -170,10 +191,12 @@ abstract class Request
 
     /**
      * @param string $path
-     * @param HeaderBag $headers
+     * @param array $headers
      */
-    protected function processRateLimits(string $path, HeaderBag $headers)
+    protected function processRateLimits(string $path, array $headers)
     {
+        $headers = new HeaderBag($headers);
+
         if ($headers->has('x-ratelimit-limit')) {
             $this->rate_limit[$path] = $headers->get('x-ratelimit-limit');
         }
