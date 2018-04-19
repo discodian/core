@@ -15,6 +15,7 @@
 namespace Discodian\Core\Providers;
 
 use Discodian\Core\Exceptions\MisconfigurationException;
+use Discodian\Core\Requests\RateLimiter;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Config\Repository;
@@ -25,6 +26,8 @@ class HttpProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->app->singleton(RateLimiter::class);
+
         $this->app->singleton(ClientInterface::class, function ($app) {
             $config = $app->make('config');
 
@@ -41,6 +44,14 @@ class HttpProvider extends ServiceProvider
     {
         if (! $config->get('discord.bot-token')) {
             throw new MisconfigurationException('Bot token is required, check config/discord.php.');
+        }
+
+        if (! $config->get('discord.endpoints.http-api')) {
+            throw new MisconfigurationException('Bot http api endpoint is required, check config/discord.php.');
+        }
+
+        if (! $config->get('discord.versions.http-api')) {
+            throw new MisconfigurationException('Bot version of http api endpoint is required, check config/discord.php.');
         }
 
         $client = new Client([

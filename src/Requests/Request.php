@@ -32,10 +32,6 @@ abstract class Request
 {
     protected $rateLimited = false;
     protected $queued = [];
-    protected $rate_limit = [];
-    protected $rate_reset = [];
-    protected $rate_remaining = [];
-    protected $retry_after;
 
     /**
      * Path to send request to.
@@ -70,13 +66,20 @@ abstract class Request
      */
     protected static $http;
 
+    /**
+     * @var RateLimiter
+     */
+    protected static $rateLimiter;
+
+    protected static $endpointFailureCount = 0;
+
     public function requestBlocking()
     {
         $path = $this->getPath();
 
         $response = static::getHttp()->request($this->method, $path, $this->buildParams());
 
-        $this->processRateLimits($path, $response->getHeaders());
+        $this->processRateLimits($path, $response);
         $this->preventRateLimiting($path, $response);
 
         return $this->parseResponseBody($response);
@@ -95,7 +98,7 @@ abstract class Request
             $promise = static::getHttp()->requestAsync($this->method, $path, $this->buildParams());
 
             $promise->then(function (Response $response) use (&$request, $path, $promise) {
-                $this->processRateLimits($path, $response->getHeaders());
+                $this->processRateLimits($path, $response);
                 $this->preventRateLimiting($path, $response, $request);
                 $this->handleEndpointFailures($response, $promise, $request);
 
@@ -119,6 +122,10 @@ abstract class Request
         return $promise;
     }
 
+    /**
+     * @param Response $response
+     * @return Response|mixed|null
+     */
     protected function parseResponseBody(Response $response)
     {
         $output = null;
@@ -136,14 +143,23 @@ abstract class Request
         return $output;
     }
 
+    /**
+     * @param Response $response
+     * @param          $defer
+     * @param          $request
+     */
     protected function handleEndpointFailures(Response $response, $defer, $request)
     {
         $code = $response->getStatusCode();
+
         if (in_array($code, [502, 525])) {
+            static::$endpointFailureCount++;
             static::getLoop()->addTimer(0.25, $request);
+        } elseif(static::$endpointFailureCount > 0) {
+            static::$endpointFailureCount = 0;
         }
 
-        if ($code < 200 || $code > 226) {
+        if ($code < 200 || $code >= 300) {
             $defer->reject($response);
         }
     }
@@ -156,17 +172,18 @@ abstract class Request
      */
     protected function preventRateLimiting(string $path, Response $response, $request = null): bool
     {
-        $remaining = Arr::get($this->rate_remaining, $path);
-        $resetsAt = Arr::get($this->rate_reset, $path);
+        /** @var RateLimitation $rateLimitation */
+        $rateLimitation = static::getRateLimiter()->getLimit($path);
 
-        if ($response->getStatusCode() === 429 || (
-            $remaining !== null && $resetsAt !== null && $remaining === 0)) {
+        if ($rateLimitation && $rateLimitation->active) {
             $this->rateLimited = true;
 
-            if (!$resetsAt && $this->retry_after) {
-                $waitFor = $this->retry_after/1000;
+            if ($rateLimitation->retry) {
+                $waitFor = $rateLimitation->retry/1000;
+                logs("Throttling request for $path, retry in {$waitFor} seconds.");
             } else {
-                $waitFor = Carbon::now()->diffInSeconds(Carbon::createFromTimestamp($resetsAt));
+                $waitFor = Carbon::now()->diffInSeconds(Carbon::createFromTimestamp($rateLimitation->resets));
+                logs("Throttling request for $path, resets {$rateLimitation->resetsDiffHuman()}.");
             }
 
             // In case we hit the rate limit already, put the current request back on the stack.
@@ -190,26 +207,14 @@ abstract class Request
     }
 
     /**
-     * @param string $path
-     * @param array $headers
+     * @param string   $path
+     * @param Response $response
      */
-    protected function processRateLimits(string $path, array $headers)
+    protected function processRateLimits(string $path, Response $response)
     {
-        $headers = new HeaderBag($headers);
+        $headers = new HeaderBag($response->getHeaders());
 
-        if ($headers->has('x-ratelimit-limit')) {
-            $this->rate_limit[$path] = $headers->get('x-ratelimit-limit');
-        }
-
-        if ($headers->has('x-ratelimit-reset')) {
-            $this->rate_reset[$path] = $headers->get('x-ratelimit-reset');
-        }
-
-        if ($headers->has('x-ratelimit-remaining')) {
-            $this->rate_remaining[$path] = $headers->get('x-ratelimit-remaining');
-        }
-
-        $this->retry_after = $headers->get('retry-after');
+        static::getRateLimiter()->processIncomingHeaders($path, $headers, $response);
     }
 
     /**
@@ -230,6 +235,15 @@ abstract class Request
         }
 
         return static::$http;
+    }
+
+    public static function getRateLimiter(): RateLimiter
+    {
+        if (!static::$rateLimiter) {
+            static::$rateLimiter = app(RateLimiter::class);
+        }
+
+        return static::$rateLimiter;
     }
 
     protected static function getLoop(): LoopInterface
