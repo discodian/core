@@ -160,7 +160,7 @@ abstract class Request
             }
             
             static::getLoop()->addTimer(0.25, $request);
-        } elseif(static::$endpointFailureCount > 0) {
+        } elseif (static::$endpointFailureCount > 0) {
             static::$endpointFailureCount = 0;
         }
 
