@@ -31,7 +31,8 @@ class GuildRoleCreate extends Event
 
         $rolePart = $this->factory->create(Role::class, $adata);
 
-        $guild = $this->factory->get(Guild::class, $rolePart->guild_id);
+        /** @var Guild $guild */
+        $guild = $this->factory->get(Guild::class, $data->guild_id);
 
         if (! is_null($guild)) {
             $guild->roles->push($rolePart);

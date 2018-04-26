@@ -158,7 +158,7 @@ abstract class Request
             if (static::$endpointFailureCount >= 5) {
                 exit("Discord endpoint failure 502 or 525, drop out after 5 attempts.");
             }
-            
+
             static::getLoop()->addTimer(0.25, $request);
         } elseif(static::$endpointFailureCount > 0) {
             static::$endpointFailureCount = 0;
