@@ -17,6 +17,7 @@ namespace Discodian\Core\Requests;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Arr;
 use React\EventLoop\LoopInterface;
@@ -77,7 +78,16 @@ abstract class Request
     {
         $path = $this->getPath();
 
-        $response = static::getHttp()->request($this->method, $path, $this->buildParams());
+        try {
+            $response = static::getHttp()->request($this->method, $path, $this->buildParams());
+        } catch (RequestException $e) {
+            if ($e->getCode() === 401) {
+                logs($e->getMessage());
+
+                // quit application running
+                exit(254);
+            }
+        }
 
         $this->processRateLimits($path, $response);
         $this->preventRateLimiting($path, $response);
@@ -156,7 +166,8 @@ abstract class Request
             static::$endpointFailureCount++;
 
             if (static::$endpointFailureCount >= 5) {
-                exit("Discord endpoint failure 502 or 525, drop out after 5 attempts.");
+                logs("Discord endpoint failure 502 or 525, drop out after 5 attempts.");
+                exit(254);
             }
 
             static::getLoop()->addTimer(0.25, $request);
