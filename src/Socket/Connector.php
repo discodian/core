@@ -174,8 +174,10 @@ class Connector
     {
         ++$this->retries;
 
-        if ($this->retries > 5) {
+        if ($this->retries > 3) {
             throw new RuntimeException('Too many retries.');
+
+            exit(254);
         }
 
         logs("Setting up websocket connection after {$this->retries} retries.");
